@@ -1,0 +1,145 @@
+{
+  "nav": {
+    "patients": "Pacientes",
+    "appointments": "Turnos",
+    "signOut": "Cerrar sesion"
+  },
+  "login": {
+    "tagline": "Sistema de gestion odontologica",
+    "signInPrompt": "Inicia sesion con tu cuenta",
+    "restricted": "Solo cuentas autorizadas pueden acceder",
+    "continueWithGoogle": "Continuar con Google",
+    "redirecting": "Redirigiendo...",
+    "email": "Email",
+    "password": "Contrasena",
+    "signIn": "Iniciar sesion",
+    "signingIn": "Iniciando sesion...",
+    "invalidCredentials": "Email o contrasena incorrectos",
+    "orDivider": "o",
+    "noAccount": "No tenes cuenta?",
+    "register": "Crear cuenta",
+    "registerTitle": "Crea tu cuenta",
+    "registerSubtitle": "Empieza a gestionar tu consultorio",
+    "name": "Nombre completo",
+    "confirmPassword": "Confirmar contrasena",
+    "passwordMismatch": "Las contrasenas no coinciden",
+    "passwordTooShort": "La contrasena debe tener al menos 8 caracteres",
+    "emailTaken": "Este email ya esta registrado",
+    "creating": "Creando cuenta...",
+    "createAccount": "Crear cuenta",
+    "haveAccount": "Ya tenes cuenta?",
+    "backToLogin": "Iniciar sesion"
+  },
+  "patients": {
+    "title": "Pacientes",
+    "count_one": "{{count}} paciente",
+    "count_other": "{{count}} pacientes",
+    "newPatient": "Nuevo paciente",
+    "searchPlaceholder": "Buscar por nombre o DNI...",
+    "noResults": "No se encontraron pacientes",
+    "empty": "Aun no hay pacientes",
+    "emptyHint": "Agrega tu primer paciente para comenzar",
+    "entries_one": "{{count}} evolucion",
+    "entries_other": "{{count}} evoluciones"
+  },
+  "patientDetail": {
+    "edit": "Editar",
+    "yearsOld": "{{age}} anos",
+    "tabs": {
+      "odontogram": "Odontograma",
+      "records": "Evoluciones",
+      "medicalHistory": "Historia clinica"
+    },
+    "medicalHistory": {
+      "allergies": "Alergias",
+      "medications": "Medicamentos actuales",
+      "background": "Antecedentes",
+      "notes": "Notas generales",
+      "noData": "Sin datos"
+    }
+  },
+  "patientForm": {
+    "newTitle": "Nuevo paciente",
+    "newSubtitle": "Completa los datos del paciente",
+    "editTitle": "Editar paciente",
+    "sections": {
+      "personal": "Datos personales",
+      "insurance": "Obra social",
+      "medicalHistory": "Historia clinica",
+      "notes": "Notas generales"
+    },
+    "fields": {
+      "lastName": "Apellido",
+      "firstName": "Nombre",
+      "id": "DNI",
+      "dob": "Fecha de nacimiento",
+      "sex": "Sexo",
+      "phone": "Telefono",
+      "email": "Email",
+      "address": "Direccion",
+      "insuranceProvider": "Obra social",
+      "memberId": "Nro de afiliado",
+      "allergies": "Alergias",
+      "allergiesPlaceholder": "Medicamentos, alimentos, materiales...",
+      "medications": "Medicamentos actuales",
+      "medicalBackground": "Antecedentes",
+      "medicalBackgroundPlaceholder": "Enfermedades previas, cirugias, condiciones cronicas..."
+    },
+    "sex": {
+      "select": "Seleccionar...",
+      "male": "Masculino",
+      "female": "Femenino",
+      "other": "Otro"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "create": "Crear paciente",
+      "save": "Guardar cambios",
+      "saving": "Guardando..."
+    }
+  },
+  "odontogram": {
+    "states": {
+      "healthy": "Sano",
+      "cavity": "Caries",
+      "filled": "Obturado",
+      "extraction": "Extraccion indicada",
+      "extracted": "Extraido",
+      "crown": "Corona",
+      "implant": "Implante",
+      "rootcanal": "Endodoncia"
+    },
+    "hint": "Selecciona un estado y haz click en el diente para marcarlo.",
+    "upper": "Superior",
+    "lower": "Inferior",
+    "summary": "Resumen:",
+    "save": "Guardar odontograma",
+    "saving": "Guardando...",
+    "saved": "Odontograma guardado"
+  },
+  "records": {
+    "newRecord": "Nueva evolucion",
+    "cancel": "Cancelar",
+    "newRecordTitle": "Nueva evolucion clinica",
+    "description": "Descripcion",
+    "descriptionPlaceholder": "Descripcion del tratamiento realizado...",
+    "teethTreated": "Dientes tratados",
+    "teethHint": "Numeros separados por coma",
+    "teethPlaceholder": "Ej: 11,12,21",
+    "amount": "Importe",
+    "save": "Registrar evolucion",
+    "saving": "Guardando...",
+    "saved": "Evolucion registrada",
+    "empty": "Sin evoluciones registradas",
+    "emptyHint": "Agrega la primera evolucion del paciente",
+    "teeth": "Dientes:",
+    "paid": "Pagado",
+    "pending": "Pendiente"
+  },
+  "appointments": {
+    "title": "Turnos",
+    "subtitle": "Integracion con Google Calendar",
+    "comingSoon": "Proximamente",
+    "comingSoonHint": "La integracion con Google Calendar estara disponible en la proxima version."
+  }
+}

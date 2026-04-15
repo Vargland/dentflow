@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git push*)",
+            "statusMessage": "Checking git push safety...",
+            "command": "node -e \"const chunks=[]; process.stdin.on('data',d=>chunks.push(d)); process.stdin.on('end',()=>{ const input=JSON.parse(Buffer.concat(chunks).toString()); const cmd=input.tool_input?.command||''; const isPush=cmd.includes('git push'); const isMain=/git push.*\\bmain\\b/.test(cmd)||/git push.*\\bmaster\\b/.test(cmd); if(!isPush){process.exit(0);} const msg=isMain?'BLOCKED: Never push directly to main. Create a feature/ branch and open a PR.':'REMINDER: Make sure you are on a feature/ branch, not main.'; const decision=isMain?'block':'allow'; console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:decision,permissionDecisionReason:msg},systemMessage:msg})); process.exit(isMain?1:0); });\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Checking spec-driven workflow...",
+            "command": "node -e \"const chunks=[]; process.stdin.on('data',d=>chunks.push(d)); process.stdin.on('end',()=>{ const input=JSON.parse(Buffer.concat(chunks).toString()); const fp=(input.tool_input?.file_path||'').replace(/\\\\\\\\/g,'/'); const GATED=['/src/actions/','/src/app/','/src/components/','/prisma/']; const isGated=GATED.some(p=>fp.includes(p)); const isSpec=fp.includes('/src/specs/'); if(!isGated||isSpec){process.exit(0);} const msg='SPEC-DRIVEN REMINDER: Estas creando un archivo en una zona de codigo ('+fp+'). Asegurate de tener una spec aprobada en src/specs/ antes de continuar.'; console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',additionalContext:msg},systemMessage:msg})); process.exit(0); });\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Checking file type for lint reminder...",
+            "command": "node -e \"const chunks=[]; process.stdin.on('data',d=>chunks.push(d)); process.stdin.on('end',()=>{ const input=JSON.parse(Buffer.concat(chunks).toString()); const fp=input.tool_input?.file_path||input.tool_response?.filePath||''; if(!fp.match(/\\.(ts|tsx)$/)){process.exit(0);} const msg='Lint check: run \\\"npm run lint\\\" and \\\"npx tsc --noEmit\\\" before committing.'; console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PostToolUse',additionalContext:msg},systemMessage:msg})); process.exit(0); });\""
+          }
+        ]
+      }
+    ]
+  }
+}

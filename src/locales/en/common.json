@@ -1,0 +1,145 @@
+{
+  "nav": {
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "tagline": "Dental practice management system",
+    "signInPrompt": "Sign in to your account",
+    "restricted": "Only authorized accounts can access this system",
+    "continueWithGoogle": "Continue with Google",
+    "redirecting": "Redirecting...",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid email or password",
+    "orDivider": "or",
+    "noAccount": "Don't have an account?",
+    "register": "Create account",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "Start managing your practice",
+    "name": "Full name",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "emailTaken": "This email is already registered",
+    "creating": "Creating account...",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account?",
+    "backToLogin": "Sign in"
+  },
+  "patients": {
+    "title": "Patients",
+    "count_one": "{{count}} patient",
+    "count_other": "{{count}} patients",
+    "newPatient": "New patient",
+    "searchPlaceholder": "Search by name or ID...",
+    "noResults": "No patients found",
+    "empty": "No patients yet",
+    "emptyHint": "Add your first patient to get started",
+    "entries_one": "{{count}} entry",
+    "entries_other": "{{count}} entries"
+  },
+  "patientDetail": {
+    "edit": "Edit",
+    "yearsOld": "{{age}} years old",
+    "tabs": {
+      "odontogram": "Odontogram",
+      "records": "Records",
+      "medicalHistory": "Medical history"
+    },
+    "medicalHistory": {
+      "allergies": "Allergies",
+      "medications": "Current medications",
+      "background": "Medical background",
+      "notes": "General notes",
+      "noData": "No data"
+    }
+  },
+  "patientForm": {
+    "newTitle": "New patient",
+    "newSubtitle": "Fill in the patient details",
+    "editTitle": "Edit patient",
+    "sections": {
+      "personal": "Personal information",
+      "insurance": "Insurance",
+      "medicalHistory": "Medical history",
+      "notes": "General notes"
+    },
+    "fields": {
+      "lastName": "Last name",
+      "firstName": "First name",
+      "id": "ID / DNI",
+      "dob": "Date of birth",
+      "sex": "Sex",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "insuranceProvider": "Insurance provider",
+      "memberId": "Member ID",
+      "allergies": "Allergies",
+      "allergiesPlaceholder": "Medications, foods, materials...",
+      "medications": "Current medications",
+      "medicalBackground": "Medical background",
+      "medicalBackgroundPlaceholder": "Previous illnesses, surgeries, chronic conditions..."
+    },
+    "sex": {
+      "select": "Select...",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create patient",
+      "save": "Save changes",
+      "saving": "Saving..."
+    }
+  },
+  "odontogram": {
+    "states": {
+      "healthy": "Healthy",
+      "cavity": "Cavity",
+      "filled": "Filled",
+      "extraction": "Extraction needed",
+      "extracted": "Extracted",
+      "crown": "Crown",
+      "implant": "Implant",
+      "rootcanal": "Root canal"
+    },
+    "hint": "Select a condition and click a tooth to apply it.",
+    "upper": "Upper",
+    "lower": "Lower",
+    "summary": "Summary:",
+    "save": "Save odontogram",
+    "saving": "Saving...",
+    "saved": "Odontogram saved"
+  },
+  "records": {
+    "newRecord": "New record",
+    "cancel": "Cancel",
+    "newRecordTitle": "New clinical record",
+    "description": "Description",
+    "descriptionPlaceholder": "Description of the treatment performed...",
+    "teethTreated": "Teeth treated",
+    "teethHint": "Comma-separated numbers",
+    "teethPlaceholder": "e.g. 11,12,21",
+    "amount": "Amount",
+    "save": "Save record",
+    "saving": "Saving...",
+    "saved": "Record added",
+    "empty": "No records yet",
+    "emptyHint": "Add the first clinical record for this patient",
+    "teeth": "Teeth:",
+    "paid": "Paid",
+    "pending": "Pending"
+  },
+  "appointments": {
+    "title": "Appointments",
+    "subtitle": "Google Calendar integration",
+    "comingSoon": "Coming soon",
+    "comingSoonHint": "Google Calendar integration will be available in the next version."
+  }
+}
