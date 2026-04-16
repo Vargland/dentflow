@@ -153,7 +153,10 @@
     "markedCompleted": "Turno marcado como completado",
     "updateError": "No se pudo actualizar el turno",
     "deleteError": "No se pudo eliminar el turno",
-    "evolutionError": "No se pudo guardar la evolucion"
+    "evolutionError": "No se pudo guardar la evolucion",
+    "sendInvite": "Enviar invitacion",
+    "inviteSent": "Invitacion enviada a {{email}}",
+    "inviteError": "No se pudo enviar la invitacion"
   },
   "appointments": {
     "title": "Turnos",

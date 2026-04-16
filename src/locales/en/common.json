@@ -153,7 +153,10 @@
     "markedCompleted": "Appointment marked as completed",
     "updateError": "Could not update appointment",
     "deleteError": "Could not delete appointment",
-    "evolutionError": "Could not save record"
+    "evolutionError": "Could not save record",
+    "sendInvite": "Send invitation",
+    "inviteSent": "Invitation sent to {{email}}",
+    "inviteError": "Could not send invitation"
   },
   "appointments": {
     "title": "Appointments",

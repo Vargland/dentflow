@@ -4,7 +4,16 @@ import { useEffect, useState, useTransition } from 'react'
 import { useSession } from 'next-auth/react'
 import { format, parseISO } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
-import { ChevronDown, ChevronUp, DollarSign, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Loader2,
+  Mail,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import type { Appointment } from '@/typing/services/appointment.interface'
@@ -21,7 +30,11 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import Odontogram from '@/app/(dashboard)/patients/[id]/_components/odontogram'
-import { deleteAppointment, updateAppointment } from '@/services/appointments.service'
+import {
+  deleteAppointment,
+  sendAppointmentInvite,
+  updateAppointment,
+} from '@/services/appointments.service'
 import { createEvolution, getEvolutions } from '@/services/evolution.service'
 import { getOdontogram } from '@/services/odontogram.service'
 import { getPatient } from '@/services/patients.service'
@@ -160,6 +173,7 @@ const EvolutionRow = ({ ev }: { ev: Evolution }) => {
 interface AppointmentTabProps {
   appointment: Appointment
   timezone: string
+  token: string
   onEdit: () => void
   onMarkCompleted: () => void
   isMarkingCompleted: boolean
@@ -168,15 +182,30 @@ interface AppointmentTabProps {
 const AppointmentTab = ({
   appointment,
   timezone,
+  token,
   onEdit,
   onMarkCompleted,
   isMarkingCompleted,
 }: AppointmentTabProps) => {
   const { t } = useTranslation()
 
+  const [isSendingInvite, startSendInvite] = useTransition()
+
   const localStart = toZonedTime(parseISO(appointment.start_time), timezone)
 
   const localEnd = toZonedTime(parseISO(appointment.end_time), timezone)
+
+  const handleSendInvite = () => {
+    startSendInvite(async () => {
+      try {
+        const res = await sendAppointmentInvite(token, appointment.id)
+
+        toast.success(t('appointmentDetail.inviteSent', { email: res.sent_to }))
+      } catch {
+        toast.error(t('appointmentDetail.inviteError'))
+      }
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -249,6 +278,23 @@ const AppointmentTab = ({
           >
             {isMarkingCompleted ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {t('appointmentDetail.markCompleted')}
+          </Button>
+        )}
+
+        {/* Send / resend invite — only when patient is linked */}
+        {appointment.patient_id && (
+          <Button
+            variant="outline"
+            className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+            onClick={handleSendInvite}
+            disabled={isSendingInvite}
+          >
+            {isSendingInvite ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4" />
+            )}
+            {t('appointmentDetail.sendInvite')}
           </Button>
         )}
       </div>
@@ -729,6 +775,7 @@ export const AppointmentDetailModal = ({
                 <AppointmentTab
                   appointment={appointment}
                   timezone={timezone}
+                  token={token}
                   onEdit={() => setEditingAppointment(true)}
                   onMarkCompleted={handleMarkCompleted}
                   isMarkingCompleted={isMarkingCompleted}

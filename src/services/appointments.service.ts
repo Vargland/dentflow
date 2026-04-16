@@ -81,3 +81,12 @@ export const updateSettings = (token: string, input: UpdateSettingsInput): Promi
  */
 export const disconnectCalendar = (token: string): Promise<void> =>
   apiClient.delete<void>('/settings/calendar', token)
+
+/**
+ * Sends (or resends) the appointment invitation email to the linked patient.
+ *
+ * @param token - JWT Bearer token.
+ * @param id    - Appointment UUID.
+ */
+export const sendAppointmentInvite = (token: string, id: string): Promise<{ sent_to: string }> =>
+  apiClient.post<{ sent_to: string }>(`/appointments/${id}/send-invite`, token, {})
