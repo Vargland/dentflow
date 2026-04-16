@@ -1,13 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import {
-  ArrowLeft,
-  Mail,
-  MapPin,
-  Pencil,
-  Phone,
-  ShieldCheck,
-} from 'lucide-react'
+import { ArrowLeft, Mail, MapPin, Pencil, Phone, ShieldCheck } from 'lucide-react'
 
 import type { PatientPageParams } from '@/typing/pages/patients.types'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
@@ -22,7 +15,7 @@ import { getEvolutions } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
 
 import EvolutionList from './_components/evolution-list'
-import Odontogram from './_components/odontogram'
+import Odontogram from './_components/odontogram-v2'
 
 /**
  * Calculates age in years from a date-of-birth string.
