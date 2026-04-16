@@ -84,7 +84,7 @@ export const apiClient = {
    * @param path  - API path.
    * @param token - JWT Bearer token.
    */
-  get: <T>(path: string, token: string) => request<T>(path, token),
+  get: <T>(path: string, token: string) => request<T>(path, token, { cache: 'no-store' }),
 
   /**
    * Performs a POST request.

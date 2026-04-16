@@ -26,6 +26,7 @@ import { useTranslation } from '@/lib/i18n/client'
 import { Button } from '@/components/ui/button'
 import { listAppointments } from '@/services/appointments.service'
 
+import { AppointmentDetailModal } from './appointment-detail-modal'
 import { AppointmentForm } from './appointment-form'
 
 type View = 'day' | 'week' | 'month'
@@ -331,7 +332,10 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
 
   const [loading, setLoading] = useState(false)
 
-  /** Selected appointment for editing, or null for creating a new one. */
+  /** Appointment currently shown in the detail modal (click on existing). */
+  const [detailing, setDetailing] = useState<Appointment | undefined>(undefined)
+
+  /** Selected appointment for editing via form, or null for creating a new one. */
   const [editing, setEditing] = useState<Appointment | null | undefined>(undefined)
 
   /** Pre-filled start datetime when clicking on an empty slot. */
@@ -380,10 +384,10 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
   }
 
   const openEdit = (appt: Appointment) => {
-    setEditing(appt)
-
-    setDefaultStart(undefined)
+    setDetailing(appt)
   }
+
+  const closeDetail = () => setDetailing(undefined)
 
   const closeForm = () => setEditing(undefined)
 
@@ -518,7 +522,21 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
         )}
       </div>
 
-      {/* Form dialog */}
+      {/* Detail modal — shown when clicking an existing appointment */}
+      {detailing !== undefined && (
+        <AppointmentDetailModal
+          appointment={detailing}
+          timezone={timezone}
+          onClose={closeDetail}
+          onUpdated={() => {
+            closeDetail()
+
+            fetchAppointments()
+          }}
+        />
+      )}
+
+      {/* Form dialog — only for creating new appointments */}
       {editing !== undefined && (
         <AppointmentForm
           appointment={editing}

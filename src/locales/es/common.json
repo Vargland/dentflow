@@ -137,6 +137,24 @@
     "paid": "Pagado",
     "pending": "Pendiente"
   },
+  "appointmentDetail": {
+    "tabs": {
+      "appointment": "Turno",
+      "odontogram": "Odontograma",
+      "evolutions": "Evoluciones"
+    },
+    "labelTitle": "Titulo",
+    "labelDateTime": "Fecha y hora",
+    "labelStatus": "Estado",
+    "labelPatient": "Paciente",
+    "labelNotes": "Notas",
+    "editAppointment": "Editar turno",
+    "markCompleted": "Marcar completado",
+    "markedCompleted": "Turno marcado como completado",
+    "updateError": "No se pudo actualizar el turno",
+    "deleteError": "No se pudo eliminar el turno",
+    "evolutionError": "No se pudo guardar la evolucion"
+  },
   "appointments": {
     "title": "Turnos",
     "subtitle": "Gestion de agenda",

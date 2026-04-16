@@ -137,6 +137,24 @@
     "paid": "Paid",
     "pending": "Pending"
   },
+  "appointmentDetail": {
+    "tabs": {
+      "appointment": "Appointment",
+      "odontogram": "Odontogram",
+      "evolutions": "Records"
+    },
+    "labelTitle": "Title",
+    "labelDateTime": "Date & time",
+    "labelStatus": "Status",
+    "labelPatient": "Patient",
+    "labelNotes": "Notes",
+    "editAppointment": "Edit appointment",
+    "markCompleted": "Mark as completed",
+    "markedCompleted": "Appointment marked as completed",
+    "updateError": "Could not update appointment",
+    "deleteError": "Could not delete appointment",
+    "evolutionError": "Could not save record"
+  },
   "appointments": {
     "title": "Appointments",
     "subtitle": "Manage your schedule",
