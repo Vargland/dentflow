@@ -18,6 +18,10 @@ export default async function AppointmentsPage() {
   const settings = await getSettings(token).catch(() => ({
     timezone: 'America/Argentina/Buenos_Aires',
     calendarConnected: false,
+    doctorName: '',
+    clinicAddress: '',
+    clinicPhone: '',
+    emailLanguage: 'es',
   }))
 
   return (

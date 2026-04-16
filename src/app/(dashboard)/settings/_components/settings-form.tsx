@@ -7,6 +7,7 @@ import { CheckCircle, ExternalLink, Loader2, Unlink } from 'lucide-react'
 import type { UserSettings } from '@/typing/services/appointment.interface'
 import { useTranslation } from '@/lib/i18n/client'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -45,7 +46,7 @@ interface SettingsFormProps {
 }
 
 /**
- * Settings form — timezone selector + Google Calendar connection.
+ * Settings form — clinic profile, timezone, and Google Calendar connection.
  */
 export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFormProps) => {
   const { data: session } = useSession()
@@ -53,6 +54,14 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
   const { t } = useTranslation()
 
   const [timezone, setTimezone] = useState(initialSettings.timezone)
+
+  const [doctorName, setDoctorName] = useState(initialSettings.doctorName ?? '')
+
+  const [clinicAddress, setClinicAddress] = useState(initialSettings.clinicAddress ?? '')
+
+  const [clinicPhone, setClinicPhone] = useState(initialSettings.clinicPhone ?? '')
+
+  const [emailLanguage, setEmailLanguage] = useState(initialSettings.emailLanguage || 'es')
 
   const [calendarConnected, setCalendarConnected] = useState(initialSettings.calendarConnected)
 
@@ -68,7 +77,13 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
     if (!session?.accessToken) return
 
     startTransition(async () => {
-      await updateSettings(session.accessToken as string, { timezone })
+      await updateSettings(session.accessToken as string, {
+        timezone,
+        doctorName,
+        clinicAddress,
+        clinicPhone,
+        emailLanguage,
+      })
 
       setSaved(true)
 
@@ -92,6 +107,57 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
 
   return (
     <div className="space-y-8 max-w-lg">
+      {/* Clinic profile */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">{t('settings.clinicProfile')}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('settings.clinicProfileDescription')}</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="doctor-name">{t('settings.doctorName')}</Label>
+          <Input
+            id="doctor-name"
+            value={doctorName}
+            onChange={e => setDoctorName(e.target.value)}
+            placeholder="Dr. Nombre Apellido"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clinic-address">{t('settings.clinicAddress')}</Label>
+          <Input
+            id="clinic-address"
+            value={clinicAddress}
+            onChange={e => setClinicAddress(e.target.value)}
+            placeholder="Av. Corrientes 1234, CABA"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clinic-phone">{t('settings.clinicPhone')}</Label>
+          <Input
+            id="clinic-phone"
+            value={clinicPhone}
+            onChange={e => setClinicPhone(e.target.value)}
+            placeholder="+54 11 1234-5678"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email-language">{t('settings.emailLanguage')}</Label>
+          <Select value={emailLanguage} onValueChange={v => setEmailLanguage(v ?? emailLanguage)}>
+            <SelectTrigger id="email-language" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="es">{t('settings.emailLanguageEs')}</SelectItem>
+              <SelectItem value="en">{t('settings.emailLanguageEn')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Timezone */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <div>

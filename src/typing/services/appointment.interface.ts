@@ -34,9 +34,17 @@ export interface UserSettings {
   timezone: string
   calendarConnected: boolean
   calendarEmail?: string
+  doctorName: string
+  clinicAddress: string
+  clinicPhone: string
+  emailLanguage: string
 }
 
 /** Input for PUT /settings. */
 export interface UpdateSettingsInput {
   timezone: string
+  doctorName: string
+  clinicAddress: string
+  clinicPhone: string
+  emailLanguage: string
 }
