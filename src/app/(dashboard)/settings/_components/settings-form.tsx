@@ -46,7 +46,8 @@ interface SettingsFormProps {
 }
 
 /**
- * Settings form — clinic profile, timezone, and Google Calendar connection.
+ * Settings form — clinic profile, timezone selector, and Google Calendar connection.
+ * All fields are saved together with a single Save button.
  */
 export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFormProps) => {
   const { data: session } = useSession()
@@ -105,82 +106,90 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
 
   const calendarOAuthUrl = `${apiBase.replace('/api/v1', '')}/auth/google/calendar?doctor_id=${doctorId}`
 
+  const emailLanguageLabel =
+    emailLanguage === 'en' ? t('settings.emailLanguageEn') : t('settings.emailLanguageEs')
+
   return (
     <div className="space-y-8 max-w-lg">
-      {/* Clinic profile */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <div>
-          <h2 className="font-semibold text-gray-900">{t('settings.clinicProfile')}</h2>
-          <p className="text-sm text-gray-500 mt-1">{t('settings.clinicProfileDescription')}</p>
+      {/* Clinic profile + Timezone — one card, one Save button */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+        {/* Clinic profile section */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">{t('settings.clinicProfile')}</h2>
+            <p className="text-sm text-gray-500 mt-1">{t('settings.clinicProfileDescription')}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="doctor-name">{t('settings.doctorName')}</Label>
+            <Input
+              id="doctor-name"
+              value={doctorName}
+              onChange={e => setDoctorName(e.target.value)}
+              placeholder="Dr. Nombre Apellido"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clinic-address">{t('settings.clinicAddress')}</Label>
+            <Input
+              id="clinic-address"
+              value={clinicAddress}
+              onChange={e => setClinicAddress(e.target.value)}
+              placeholder="Av. Corrientes 1234, CABA"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clinic-phone">{t('settings.clinicPhone')}</Label>
+            <Input
+              id="clinic-phone"
+              value={clinicPhone}
+              onChange={e => setClinicPhone(e.target.value)}
+              placeholder="+54 11 1234-5678"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email-language">{t('settings.emailLanguage')}</Label>
+            <Select value={emailLanguage} onValueChange={v => setEmailLanguage(v ?? emailLanguage)}>
+              <SelectTrigger id="email-language" className="w-full">
+                <SelectValue>{emailLanguageLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="es">{t('settings.emailLanguageEs')}</SelectItem>
+                <SelectItem value="en">{t('settings.emailLanguageEn')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="doctor-name">{t('settings.doctorName')}</Label>
-          <Input
-            id="doctor-name"
-            value={doctorName}
-            onChange={e => setDoctorName(e.target.value)}
-            placeholder="Dr. Nombre Apellido"
-          />
-        </div>
+        {/* Divider */}
+        <div className="border-t border-gray-100" />
 
-        <div className="space-y-2">
-          <Label htmlFor="clinic-address">{t('settings.clinicAddress')}</Label>
-          <Input
-            id="clinic-address"
-            value={clinicAddress}
-            onChange={e => setClinicAddress(e.target.value)}
-            placeholder="Av. Corrientes 1234, CABA"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="clinic-phone">{t('settings.clinicPhone')}</Label>
-          <Input
-            id="clinic-phone"
-            value={clinicPhone}
-            onChange={e => setClinicPhone(e.target.value)}
-            placeholder="+54 11 1234-5678"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email-language">{t('settings.emailLanguage')}</Label>
-          <Select value={emailLanguage} onValueChange={v => setEmailLanguage(v ?? emailLanguage)}>
-            <SelectTrigger id="email-language" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="es">{t('settings.emailLanguageEs')}</SelectItem>
-              <SelectItem value="en">{t('settings.emailLanguageEn')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Timezone */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <div>
+        {/* Timezone section */}
+        <div className="space-y-4">
           <h2 className="font-semibold text-gray-900">{t('settings.timezone')}</h2>
+
+          <div className="space-y-2">
+            <Label htmlFor="timezone">{t('settings.timezone')}</Label>
+            <Select value={timezone} onValueChange={v => setTimezone(v ?? timezone)}>
+              <SelectTrigger id="timezone" className="w-full">
+                <SelectValue placeholder={t('settings.timezonePlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONES.map(tz => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz.replace(/_/g, ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="timezone">{t('settings.timezone')}</Label>
-          <Select value={timezone} onValueChange={v => setTimezone(v ?? timezone)}>
-            <SelectTrigger id="timezone" className="w-full">
-              <SelectValue placeholder={t('settings.timezonePlaceholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              {TIMEZONES.map(tz => (
-                <SelectItem key={tz} value={tz}>
-                  {tz.replace(/_/g, ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-3">
+        {/* Single Save button for all fields */}
+        <div className="flex items-center gap-3 pt-2">
           <Button onClick={handleSave} disabled={isPending}>
             {isPending ? (
               <>
@@ -200,7 +209,7 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
         </div>
       </div>
 
-      {/* Google Calendar */}
+      {/* Google Calendar — separate card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <div>
           <h2 className="font-semibold text-gray-900">{t('settings.calendar.title')}</h2>
