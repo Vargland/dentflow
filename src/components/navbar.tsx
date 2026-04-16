@@ -1,49 +1,55 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { Calendar, Menu, Users, X } from "lucide-react";
+import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
+import { Calendar, Menu, Settings, Users, X } from 'lucide-react'
 
-import { useTranslation } from "@/lib/i18n/client";
-import type { Language } from "@/lib/i18n/settings";
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useTranslation } from '@/lib/i18n/client'
+import type { Language } from '@/lib/i18n/settings'
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LangSwitcher } from "@/components/lang-switcher";
+} from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { LangSwitcher } from '@/components/lang-switcher'
 
 interface NavbarProps {
   user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  };
-  lang: Language;
+    name?: string | null
+    email?: string | null
+    image?: string | null
+  }
+  lang: Language
 }
 
 export const Navbar = ({ user, lang }: NavbarProps) => {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const navLinks = [
-    { href: "/patients", label: t("nav.patients"), icon: Users },
-    { href: "/appointments", label: t("nav.appointments"), icon: Calendar },
-  ];
+    { href: '/patients', label: t('nav.patients'), icon: Users },
+    { href: '/appointments', label: t('nav.appointments'), icon: Calendar },
+    { href: '/settings', label: t('nav.settings'), icon: Settings },
+  ]
 
   const initials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : "U";
+    ? user.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'U'
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
@@ -61,10 +67,10 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 pathname.startsWith(href)
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               )}
             >
               <Icon className="h-4 w-4" />
@@ -79,7 +85,7 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
           <DropdownMenu>
             <DropdownMenuTrigger className="relative h-9 w-9 rounded-full cursor-pointer bg-transparent border-0 p-0 outline-none focus:ring-2 focus:ring-blue-500">
               <Avatar className="h-9 w-9">
-                <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
+                <AvatarImage src={user.image ?? ''} alt={user.name ?? ''} />
                 <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
@@ -91,10 +97,10 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
                 <p className="text-gray-500 text-xs truncate">{user.email}</p>
               </div>
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => signOut({ callbackUrl: '/login' })}
                 className="text-red-600 cursor-pointer"
               >
-                {t("nav.signOut")}
+                {t('nav.signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -118,10 +124,10 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
                     href={href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                       pathname.startsWith(href)
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-100'
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -133,7 +139,7 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
                 <LangSwitcher currentLang={lang} />
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.image ?? ""} />
+                    <AvatarImage src={user.image ?? ''} />
                     <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
                       {initials}
                     </AvatarFallback>
@@ -147,9 +153,9 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
                   variant="outline"
                   size="sm"
                   className="w-full text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  onClick={() => signOut({ callbackUrl: '/login' })}
                 >
-                  {t("nav.signOut")}
+                  {t('nav.signOut')}
                 </Button>
               </div>
             </div>
@@ -157,5 +163,5 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
         </Sheet>
       </div>
     </header>
-  );
+  )
 }

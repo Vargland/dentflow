@@ -2,6 +2,7 @@
   "nav": {
     "patients": "Pacientes",
     "appointments": "Turnos",
+    "settings": "Configuracion",
     "signOut": "Cerrar sesion"
   },
   "login": {
@@ -138,8 +139,65 @@
   },
   "appointments": {
     "title": "Turnos",
-    "subtitle": "Integracion con Google Calendar",
-    "comingSoon": "Proximamente",
-    "comingSoonHint": "La integracion con Google Calendar estara disponible en la proxima version."
+    "subtitle": "Gestion de agenda",
+    "newAppointment": "Nuevo turno",
+    "views": {
+      "day": "Dia",
+      "week": "Semana",
+      "month": "Mes"
+    },
+    "today": "Hoy",
+    "noAppointments": "Sin turnos",
+    "form": {
+      "title": "Nuevo turno",
+      "editTitle": "Editar turno",
+      "appointmentTitle": "Titulo",
+      "appointmentTitlePlaceholder": "Ej: Limpieza, Consulta...",
+      "patient": "Paciente (opcional)",
+      "patientPlaceholder": "Buscar paciente...",
+      "noPatient": "Sin paciente (solo titulo)",
+      "date": "Fecha",
+      "startTime": "Hora inicio",
+      "endTime": "Hora fin",
+      "duration": "Duracion (min)",
+      "status": "Estado",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas adicionales...",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "delete": "Eliminar",
+      "confirmDelete": "Eliminar este turno?",
+      "statuses": {
+        "scheduled": "Programado",
+        "completed": "Completado",
+        "cancelled": "Cancelado"
+      }
+    },
+    "overlap": "Este horario se superpone con un turno existente",
+    "calendarBanner": {
+      "title": "Conectar Google Calendar",
+      "description": "Sincroniza tus turnos con Google Calendar automaticamente.",
+      "connect": "Conectar",
+      "connected": "Conectado como {{email}}",
+      "disconnect": "Desconectar"
+    }
+  },
+  "settings": {
+    "title": "Configuracion",
+    "subtitle": "Gestion de preferencias",
+    "timezone": "Zona horaria",
+    "timezonePlaceholder": "Seleccionar zona horaria...",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saved": "Configuracion guardada",
+    "calendar": {
+      "title": "Google Calendar",
+      "description": "Conecta tu Google Calendar para sincronizar los turnos automaticamente.",
+      "connect": "Conectar Google Calendar",
+      "connected": "Conectado como {{email}}",
+      "disconnect": "Desconectar",
+      "disconnecting": "Desconectando..."
+    }
   }
 }

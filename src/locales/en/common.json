@@ -2,6 +2,7 @@
   "nav": {
     "patients": "Patients",
     "appointments": "Appointments",
+    "settings": "Settings",
     "signOut": "Sign out"
   },
   "login": {
@@ -138,8 +139,65 @@
   },
   "appointments": {
     "title": "Appointments",
-    "subtitle": "Google Calendar integration",
-    "comingSoon": "Coming soon",
-    "comingSoonHint": "Google Calendar integration will be available in the next version."
+    "subtitle": "Manage your schedule",
+    "newAppointment": "New appointment",
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "today": "Today",
+    "noAppointments": "No appointments",
+    "form": {
+      "title": "New appointment",
+      "editTitle": "Edit appointment",
+      "appointmentTitle": "Title",
+      "appointmentTitlePlaceholder": "e.g. Cleaning, Consultation...",
+      "patient": "Patient (optional)",
+      "patientPlaceholder": "Search patient...",
+      "noPatient": "No patient (free-text only)",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "duration": "Duration (min)",
+      "status": "Status",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes...",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "delete": "Delete",
+      "confirmDelete": "Delete this appointment?",
+      "statuses": {
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "overlap": "This time slot overlaps an existing appointment",
+    "calendarBanner": {
+      "title": "Connect Google Calendar",
+      "description": "Sync your appointments with Google Calendar automatically.",
+      "connect": "Connect",
+      "connected": "Connected as {{email}}",
+      "disconnect": "Disconnect"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account preferences",
+    "timezone": "Timezone",
+    "timezonePlaceholder": "Select timezone...",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Settings saved",
+    "calendar": {
+      "title": "Google Calendar",
+      "description": "Connect your Google Calendar to sync appointments automatically.",
+      "connect": "Connect Google Calendar",
+      "connected": "Connected as {{email}}",
+      "disconnect": "Disconnect",
+      "disconnecting": "Disconnecting..."
+    }
   }
 }
