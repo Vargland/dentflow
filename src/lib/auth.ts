@@ -108,13 +108,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return token
       }
 
-      // First sign-in via Google: call Go /auth/login with Google id token
-      // We don't have a Go account for Google users — they get a synthesized token
-      // using the same mintToken approach (matches the old behaviour)
+      // First sign-in via Google: find or create user in Go API by email
       if (user && account?.provider === 'google') {
+        const apiBase = API_URL.replace('/api/v1', '')
+
+        // Try to find existing user by logging in with a magic approach:
+        // Call Go /auth/google-login which finds or creates user by email
+        const res = await fetch(`${apiBase}/auth/google-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email ?? '',
+            name: user.name ?? '',
+            google_id: user.id ?? '',
+          }),
+        })
+
+        if (res.ok) {
+          const data = (await res.json()) as { token: string; name: string; email: string }
+
+          const { decodeJwt } = await import('jose')
+
+          const { sub } = decodeJwt(data.token)
+
+          token.id = sub as string
+
+          token.accessToken = data.token
+
+          return token
+        }
+
+        // Fallback: mint a token with Google ID (calendar won't work but login will)
         token.id = user.id
 
-        // Re-use the same Go login-compatible JWT format but minted client-side
         const { SignJWT } = await import('jose')
 
         const secret = new TextEncoder().encode(process.env.AUTH_SECRET!)
@@ -150,7 +176,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const secret = new TextEncoder().encode(process.env.AUTH_SECRET!)
 
       token.accessToken = await new SignJWT({
-        sub: (token.id as string | undefined) ?? (token.sub ?? ''),
+        sub: (token.id as string | undefined) ?? token.sub ?? '',
         email: (token.email as string | undefined) ?? '',
         name: (token.name as string | undefined) ?? '',
       })
