@@ -94,7 +94,7 @@ const EvolutionRow = ({ ev }: { ev: Evolution }) => {
   )
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -481,7 +481,7 @@ const EvolutionsTab = ({ patientId, token }: EvolutionsTabProps) => {
 
       {/* Evolutions list */}
       {evolutions.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-12 text-gray-400 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
           <p className="font-medium">{t('records.empty')}</p>
           <p className="text-sm mt-1">{t('records.emptyHint')}</p>
         </div>

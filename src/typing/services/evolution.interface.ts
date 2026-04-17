@@ -12,6 +12,8 @@ export interface Evolution {
   pagado: boolean
   fecha: string
   createdAt: string
+  /** Set by the API when the record has been edited after creation. */
+  updatedAt?: string
 }
 
 /** Request body for POST /patients/:id/evolutions. */
