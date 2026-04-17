@@ -160,7 +160,10 @@
     "emptyHint": "Agrega la primera evolucion del paciente",
     "teeth": "Dientes:",
     "paid": "Pagado",
-    "pending": "Pendiente"
+    "pending": "Pendiente",
+    "markPaid": "Marcar como pagado",
+    "markPending": "Marcar como pendiente",
+    "amountPlaceholder": "Importe"
   },
   "appointmentDetail": {
     "tabs": {
@@ -262,7 +265,9 @@
     "cancelReasonAbsent": "Ausente / no se presento",
     "cancelReasonCustom": "Otro motivo",
     "cancelReasonPlaceholder": "Ej: llamo para avisar, reagendo...",
-    "confirmCancel": "Confirmar cancelacion"
+    "confirmCancel": "Confirmar cancelacion",
+    "balance": "Balance",
+    "balanceTotal": "Total"
   },
   "settings": {
     "title": "Configuracion",
