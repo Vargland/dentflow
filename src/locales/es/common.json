@@ -160,7 +160,13 @@
     "emptyHint": "Agrega la primera evolucion del paciente",
     "teeth": "Dientes:",
     "paid": "Pagado",
-    "pending": "Pendiente"
+    "pending": "Pendiente",
+    "edit": "Editar",
+    "editRecord": "Editar evolucion",
+    "saveChanges": "Guardar cambios",
+    "updated": "Evolucion actualizada",
+    "edited": "editado",
+    "editedAt": "Editado el {{date}}"
   },
   "appointmentDetail": {
     "tabs": {
@@ -267,7 +273,9 @@
     "newEvolution": "Nueva evolucion",
     "finishAndSave": "Finalizar y guardar evolucion",
     "evolutionPlaceholder": "Describe el tratamiento realizado, observaciones y proximos pasos...",
-    "teethTreated": "Piezas tratadas"
+    "teethTreated": "Piezas tratadas",
+    "reopenAppointment": "Reabrir turno",
+    "reopenedSuccess": "Turno reabierto"
   },
   "settings": {
     "title": "Configuracion",

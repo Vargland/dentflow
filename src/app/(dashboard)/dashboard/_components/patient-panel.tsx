@@ -15,7 +15,9 @@ import {
   ExternalLink,
   Loader2,
   Mail,
+  Pencil,
   Phone,
+  RotateCcw,
   ScanLine,
   Search,
   Stethoscope,
@@ -154,6 +156,12 @@ const PatientPanel = ({
   const [isUpdating, startUpdate] = useTransition()
 
   const [togglingPaidId, setTogglingPaidId] = useState<string | null>(null)
+
+  const [editingEvId, setEditingEvId] = useState<string | null>(null)
+
+  const [editingEvText, setEditingEvText] = useState('')
+
+  const [savingEvId, setSavingEvId] = useState<string | null>(null)
 
   // Load patient + evolutions whenever the selected appointment changes
   useEffect(() => {
@@ -303,6 +311,64 @@ const PatientPanel = ({
         toast.error(t('appointmentDetail.updateError'))
       }
     })
+  }
+
+  /**
+   * Reopens a completed or cancelled appointment by setting its status back to scheduled.
+   */
+  const handleReopenAppointment = () => {
+    if (!appointment) return
+
+    startUpdate(async () => {
+      try {
+        await updateAppointment(token, appointment.id, {
+          patient_id: appointment.patient_id,
+          title: appointment.title,
+          start_time: appointment.start_time,
+          end_time: appointment.end_time,
+          duration_minutes: appointment.duration_minutes,
+          status: 'scheduled',
+          notes: null,
+          allow_overlap: true,
+        })
+
+        onAppointmentUpdated(appointment.id, 'scheduled')
+
+        toast.success(t('dashboard.reopenedSuccess'))
+      } catch {
+        toast.error(t('appointmentDetail.updateError'))
+      }
+    })
+  }
+
+  /**
+   * Saves an inline edit to an evolution's description.
+   *
+   * @param ev - The evolution being edited.
+   */
+  const handleSaveEvolutionEdit = async (ev: Evolution) => {
+    if (!patient || !editingEvText.trim() || savingEvId === ev.id) return
+
+    setSavingEvId(ev.id)
+
+    try {
+      const updated = await updateEvolution({
+        token,
+        patientId: patient.id,
+        evolutionId: ev.id,
+        input: { descripcion: editingEvText.trim() },
+      })
+
+      setEvolutions(prev => prev.map(e => (e.id === updated.id ? updated : e)))
+
+      setEditingEvId(null)
+
+      toast.success(t('records.updated'))
+    } catch {
+      toast.error(t('appointmentDetail.evolutionError'))
+    } finally {
+      setSavingEvId(null)
+    }
   }
 
   // ── Keyboard shortcut: Cmd/Ctrl + Enter → finish appointment ────────────────
@@ -593,51 +659,120 @@ const PatientPanel = ({
           {showHistory && (
             <div className="mt-1.5 space-y-1.5">
               {recentEvolutions.length > 0 ? (
-                recentEvolutions.map(ev => (
-                  <div
-                    key={ev.id}
-                    className="bg-gray-50/70 dark:bg-gray-800/50 rounded-lg px-3 py-2.5 space-y-1"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 text-[11px] text-gray-300 dark:text-gray-600">
-                        <Clock className="h-3 w-3" />
-                        <span>{formatDate(ev.fecha, i18n.language)}</span>
-                      </div>
-                      {ev.importe !== null && ev.importe !== undefined && (
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePaid(ev)}
-                          disabled={togglingPaidId === ev.id}
-                          className={cn(
-                            'flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors shrink-0',
-                            togglingPaidId === ev.id && 'opacity-50',
-                            ev.pagado
-                              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                              : 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
+                recentEvolutions.map(ev => {
+                  const isEditing = editingEvId === ev.id
+
+                  return (
+                    <div
+                      key={ev.id}
+                      className="bg-gray-50/70 dark:bg-gray-800/50 rounded-lg px-3 py-2.5 space-y-1"
+                    >
+                      {/* Header: date + paid + edit */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-300 dark:text-gray-600">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatDate(ev.fecha, i18n.language)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {ev.importe !== null && ev.importe !== undefined && (
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePaid(ev)}
+                              disabled={togglingPaidId === ev.id}
+                              className={cn(
+                                'flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors',
+                                togglingPaidId === ev.id && 'opacity-50',
+                                ev.pagado
+                                  ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                                  : 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
+                              )}
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              {ev.pagado ? t('records.paid') : t('records.pending')}
+                            </button>
                           )}
-                        >
-                          <CheckCircle2 className="h-3 w-3" />
-                          {ev.pagado ? t('records.paid') : t('records.pending')}
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-snug">
-                      {ev.descripcion}
-                    </p>
-                    {ev.dientes.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-0.5">
-                        {ev.dientes.map(d => (
-                          <span
-                            key={d}
-                            className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
-                          >
-                            {d}
-                          </span>
-                        ))}
+                          {!isEditing && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingEvId(ev.id)
+
+                                setEditingEvText(ev.descripcion)
+                              }}
+                              title={t('records.edit')}
+                              className="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))
+
+                      {/* Description — inline editable */}
+                      {isEditing ? (
+                        <div className="space-y-1.5 pt-0.5">
+                          <textarea
+                            value={editingEvText}
+                            onChange={e => setEditingEvText(e.target.value)}
+                            rows={3}
+                            autoFocus
+                            className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+                          />
+                          <div className="flex gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setEditingEvId(null)}
+                              className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1 transition-colors"
+                            >
+                              {t('records.cancel')}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={savingEvId === ev.id}
+                              onClick={() => handleSaveEvolutionEdit(ev)}
+                              className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
+                            >
+                              {savingEvId === ev.id && <Loader2 className="h-3 w-3 animate-spin" />}
+                              {t('records.saveChanges')}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-snug">
+                          {ev.descripcion}
+                        </p>
+                      )}
+
+                      {ev.dientes.length > 0 && !isEditing && (
+                        <div className="flex flex-wrap gap-1 pt-0.5">
+                          {ev.dientes.map(d => (
+                            <span
+                              key={d}
+                              className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
+                            >
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Edited note */}
+                      {!isEditing &&
+                        ev.updatedAt &&
+                        new Date(ev.updatedAt).getTime() - new Date(ev.createdAt).getTime() >
+                          5000 && (
+                          <p className="text-[10px] text-gray-300 dark:text-gray-600 italic">
+                            {t('records.editedAt', {
+                              date: new Date(ev.updatedAt).toLocaleDateString(
+                                i18n.language === 'es' ? 'es-AR' : 'en-US',
+                                { day: '2-digit', month: '2-digit', year: 'numeric' }
+                              ),
+                            })}
+                          </p>
+                        )}
+                    </div>
+                  )
+                })
               ) : (
                 <p className="text-xs text-gray-300 dark:text-gray-600 italic py-1.5">
                   {t('dashboard.noTreatments')}
@@ -715,21 +850,37 @@ const PatientPanel = ({
           )}
         </div>
 
-        {/* Already done badge */}
+        {/* Already done: status badge + reopen */}
         {isAlreadyDone && (
-          <div
-            className={cn(
-              'text-sm font-medium py-2 px-3 rounded-lg text-center',
-              appointment.status === 'completed'
-                ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
-                : 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300'
-            )}
-          >
-            {appointment.status === 'completed'
-              ? t('appointments.form.statuses.completed')
-              : appointment.notes
-                ? `${t('dashboard.cancelledByPatient')}: ${appointment.notes}`
-                : t('dashboard.cancelledByPatient')}
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                'flex-1 text-sm font-medium py-2 px-3 rounded-lg text-center',
+                appointment.status === 'completed'
+                  ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
+                  : 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300'
+              )}
+            >
+              {appointment.status === 'completed'
+                ? t('appointments.form.statuses.completed')
+                : appointment.notes
+                  ? `${t('dashboard.cancelledByPatient')}: ${appointment.notes}`
+                  : t('dashboard.cancelledByPatient')}
+            </div>
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={handleReopenAppointment}
+              title={t('dashboard.reopenAppointment')}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50 shrink-0"
+            >
+              {isUpdating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5" />
+              )}
+              {t('dashboard.reopenAppointment')}
+            </button>
           </div>
         )}
       </div>

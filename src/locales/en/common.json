@@ -160,7 +160,13 @@
     "emptyHint": "Add the first clinical record for this patient",
     "teeth": "Teeth:",
     "paid": "Paid",
-    "pending": "Pending"
+    "pending": "Pending",
+    "edit": "Edit",
+    "editRecord": "Edit record",
+    "saveChanges": "Save changes",
+    "updated": "Record updated",
+    "edited": "edited",
+    "editedAt": "Edited on {{date}}"
   },
   "appointmentDetail": {
     "tabs": {
@@ -267,7 +273,9 @@
     "newEvolution": "New evolution",
     "finishAndSave": "Finish and save evolution",
     "evolutionPlaceholder": "Describe the treatment performed, observations and next steps...",
-    "teethTreated": "Teeth treated"
+    "teethTreated": "Teeth treated",
+    "reopenAppointment": "Reopen appointment",
+    "reopenedSuccess": "Appointment reopened"
   },
   "settings": {
     "title": "Settings",
