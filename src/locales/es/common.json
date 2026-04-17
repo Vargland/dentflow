@@ -166,7 +166,10 @@
     "saveChanges": "Guardar cambios",
     "updated": "Evolucion actualizada",
     "edited": "editado",
-    "editedAt": "Editado el {{date}}"
+    "editedAt": "Editado el {{date}}",
+    "markPaid": "Marcar como pagado",
+    "markPending": "Marcar como pendiente",
+    "amountPlaceholder": "Importe"
   },
   "appointmentDetail": {
     "tabs": {
@@ -275,7 +278,9 @@
     "evolutionPlaceholder": "Describe el tratamiento realizado, observaciones y proximos pasos...",
     "teethTreated": "Piezas tratadas",
     "reopenAppointment": "Reabrir turno",
-    "reopenedSuccess": "Turno reabierto"
+    "reopenedSuccess": "Turno reabierto",
+    "balance": "Balance",
+    "balanceTotal": "Total"
   },
   "settings": {
     "title": "Configuracion",

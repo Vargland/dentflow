@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { Fragment, useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowDownUp,
   Calendar,
   CheckCircle2,
   ChevronDown,
@@ -145,6 +146,8 @@ const PatientPanel = ({
 
   const [showCancelModal, setShowCancelModal] = useState(false)
 
+  const [showAllNotes, setShowAllNotes] = useState(false)
+
   const [cancelReason, setCancelReason] = useState('')
 
   const [showHistory, setShowHistory] = useState(true)
@@ -153,7 +156,15 @@ const PatientPanel = ({
 
   const [evolutionTeeth, setEvolutionTeeth] = useState('')
 
+  const [evolutionImporte, setEvolutionImporte] = useState('')
+
+  const [evolutionPagado, setEvolutionPagado] = useState(false)
+
+  const [evolutionSortAsc, setEvolutionSortAsc] = useState(true)
+
   const [isUpdating, startUpdate] = useTransition()
+
+  const [isSavingEvolution, startSaveEvolution] = useTransition()
 
   const [togglingPaidId, setTogglingPaidId] = useState<string | null>(null)
 
@@ -172,6 +183,12 @@ const PatientPanel = ({
     setEvolutionText('')
 
     setEvolutionTeeth('')
+
+    setEvolutionImporte('')
+
+    setEvolutionPagado(false)
+
+    setShowAllNotes(false)
 
     const load = async () => {
       if (!patientId || !token) {
@@ -233,34 +250,55 @@ const PatientPanel = ({
   }
 
   /**
-   * Single primary action: optionally saves evolution, marks appointment as
-   * completed, then auto-advances to the next scheduled patient.
+   * Saves an evolution note independently from finishing the appointment.
+   * Clears the composer fields on success.
+   */
+  const handleSaveEvolution = () => {
+    if (!patient || !evolutionText.trim()) return
+
+    startSaveEvolution(async () => {
+      try {
+        const teeth = evolutionTeeth
+          .split(',')
+          .map(s => parseInt(s.trim(), 10))
+          .filter(n => !isNaN(n) && n > 0)
+
+        const importeNum = evolutionImporte !== '' ? parseFloat(evolutionImporte) : undefined
+
+        const ev = await createEvolution(token, patient.id, {
+          descripcion: evolutionText.trim(),
+          dientes: teeth.length > 0 ? teeth : undefined,
+          importe: importeNum && !isNaN(importeNum) ? importeNum : undefined,
+          pagado: evolutionPagado,
+        })
+
+        setEvolutions(prev => [ev, ...prev])
+
+        setEvolutionText('')
+
+        setEvolutionTeeth('')
+
+        setEvolutionImporte('')
+
+        setEvolutionPagado(false)
+
+        toast.success(t('records.saved'))
+      } catch {
+        toast.error(t('appointmentDetail.evolutionError'))
+      }
+    })
+  }
+
+  /**
+   * Single primary action: marks appointment as completed, then auto-advances
+   * to the next scheduled patient.
    */
   const handleFinishAppointment = () => {
     if (!appointment) return
 
     startUpdate(async () => {
       try {
-        // 1. Save evolution if textarea has content
-        if (patient && evolutionText.trim()) {
-          const teeth = evolutionTeeth
-            .split(',')
-            .map(s => parseInt(s.trim(), 10))
-            .filter(n => !isNaN(n) && n > 0)
-
-          const ev = await createEvolution(token, patient.id, {
-            descripcion: evolutionText.trim(),
-            dientes: teeth.length > 0 ? teeth : undefined,
-          })
-
-          setEvolutions(prev => [ev, ...prev])
-
-          setEvolutionText('')
-
-          setEvolutionTeeth('')
-        }
-
-        // 2. Mark appointment as completed
+        // Mark appointment as completed
         await updateAppointment(token, appointment.id, {
           patient_id: appointment.patient_id,
           title: appointment.title,
@@ -272,7 +310,7 @@ const PatientPanel = ({
           allow_overlap: true,
         })
 
-        // 3. Advance to next patient
+        // Advance to next patient
         const next = getNextAppointment()
 
         onAppointmentUpdated(appointment.id, 'completed', next?.id ?? null)
@@ -374,9 +412,9 @@ const PatientPanel = ({
   // ── Keyboard shortcut: Cmd/Ctrl + Enter → finish appointment ────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().includes('MAC')
+      const isMacPlatform = navigator.platform.toUpperCase().includes('MAC')
 
-      const modifier = isMac ? e.metaKey : e.ctrlKey
+      const modifier = isMacPlatform ? e.metaKey : e.ctrlKey
 
       if (modifier && e.key === 'Enter' && !isUpdating && appointment?.status === 'scheduled') {
         e.preventDefault()
@@ -389,7 +427,7 @@ const PatientPanel = ({
 
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointment, isUpdating, evolutionText, evolutionTeeth, patient, token])
+  }, [appointment, isUpdating, patient, token])
 
   const handleConfirmCancel = () => {
     handleCancelAppointment(cancelReason || t('dashboard.cancelReasonAbsent'))
@@ -502,13 +540,44 @@ const PatientPanel = ({
 
   const isAlreadyDone = appointment.status === 'completed' || appointment.status === 'cancelled'
 
-  const recentEvolutions = evolutions.slice(0, 5)
-
   const hasEvolutionContent = evolutionText.trim().length > 0
 
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('MAC')
 
   const shortcutHint = isMac ? '⌘↵' : 'Ctrl+↵'
+
+  // Sort evolutions for display
+  const sortedEvolutions = evolutionSortAsc ? [...evolutions].reverse() : evolutions
+
+  const recentEvolutions = sortedEvolutions.slice(0, 5)
+
+  // ── Balance calculation ──────────────────────────────────────────────────────
+
+  const evWithImporte = evolutions.filter(e => e.importe !== null && e.importe !== undefined)
+
+  const totalAmount = evWithImporte.reduce((sum, e) => sum + (e.importe ?? 0), 0)
+
+  const paidAmount = evWithImporte
+    .filter(e => e.pagado)
+    .reduce((sum, e) => sum + (e.importe ?? 0), 0)
+
+  const pendingAmount = totalAmount - paidAmount
+
+  const hasBalance = evWithImporte.length > 0
+
+  /**
+   * Formats a number as a localised currency string.
+   *
+   * @param n - The numeric value.
+   * @returns Formatted currency string.
+   */
+  const formatCurrency = (n: number) =>
+    n.toLocaleString(i18n.language === 'es' ? 'es-AR' : 'en-US', {
+      style: 'currency',
+      currency: i18n.language === 'es' ? 'ARS' : 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -594,6 +663,50 @@ const PatientPanel = ({
 
       {/* ── C. PRIMARY ACTION AREA ────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
+        {/* Balance panel */}
+        {hasBalance && (
+          <div className="px-5 pt-4">
+            <div className="rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                {t('dashboard.balance')}
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                    {t('dashboard.balanceTotal')}
+                  </p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    {formatCurrency(totalAmount)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                    {t('records.paid')}
+                  </p>
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    {formatCurrency(paidAmount)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                    {t('records.pending')}
+                  </p>
+                  <p
+                    className={cn(
+                      'text-sm font-semibold',
+                      pendingAmount > 0
+                        ? 'text-orange-500 dark:text-orange-400'
+                        : 'text-gray-400 dark:text-gray-500'
+                    )}
+                  >
+                    {formatCurrency(pendingAmount)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="px-5 pt-5 pb-4 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             {t('dashboard.newEvolution')}
@@ -632,6 +745,49 @@ const PatientPanel = ({
               className="w-28 rounded-md border border-gray-150 dark:border-gray-750 px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition-colors disabled:opacity-50"
             />
           </div>
+
+          {/* Importe + pagado inputs */}
+          <div className="flex items-center gap-2 pt-0.5">
+            <div className="relative flex items-center">
+              <span className="absolute left-2.5 text-xs text-gray-400 pointer-events-none">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={evolutionImporte}
+                onChange={e => setEvolutionImporte(e.target.value)}
+                placeholder={t('records.amountPlaceholder')}
+                disabled={isAlreadyDone}
+                className="w-28 rounded-md border border-gray-150 dark:border-gray-750 pl-6 pr-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition-colors disabled:opacity-50"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={isAlreadyDone}
+              onClick={() => setEvolutionPagado(v => !v)}
+              className={cn(
+                'flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border transition-colors shrink-0',
+                isAlreadyDone && 'opacity-50 cursor-not-allowed',
+                evolutionPagado
+                  ? 'border-green-400 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 hover:text-gray-600 dark:hover:text-gray-400'
+              )}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {evolutionPagado ? t('records.paid') : t('records.pending')}
+            </button>
+            {!isAlreadyDone && (
+              <Button
+                type="button"
+                disabled={!hasEvolutionContent || isSavingEvolution}
+                onClick={handleSaveEvolution}
+                className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shrink-0 h-8 text-xs px-3"
+              >
+                {isSavingEvolution ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                {t('records.save')}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ── D. HISTORY — collapsible, visually de-emphasised ─────────────────── */}
@@ -658,6 +814,30 @@ const PatientPanel = ({
 
           {showHistory && (
             <div className="mt-1.5 space-y-1.5">
+              {/* Sort toggle + all notes link */}
+              {evolutions.length > 0 && (
+                <div className="flex items-center justify-between pb-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setEvolutionSortAsc(v => !v)}
+                    className="flex items-center gap-1 text-[10px] text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"
+                    title={evolutionSortAsc ? t('dashboard.sortNewest') : t('dashboard.sortOldest')}
+                  >
+                    <ArrowDownUp className="h-3 w-3" />
+                    {evolutionSortAsc ? t('dashboard.sortOldest') : t('dashboard.sortNewest')}
+                  </button>
+                  {evolutions.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllNotes(true)}
+                      className="text-[10px] text-blue-400 dark:text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      {t('dashboard.allNotes')} →
+                    </button>
+                  )}
+                </div>
+              )}
+
               {recentEvolutions.length > 0 ? (
                 recentEvolutions.map(ev => {
                   const isEditing = editingEvId === ev.id
@@ -675,21 +855,31 @@ const PatientPanel = ({
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {ev.importe !== null && ev.importe !== undefined && (
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePaid(ev)}
-                              disabled={togglingPaidId === ev.id}
-                              className={cn(
-                                'flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors',
-                                togglingPaidId === ev.id && 'opacity-50',
-                                ev.pagado
-                                  ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                                  : 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-                              )}
-                            >
-                              <CheckCircle2 className="h-3 w-3" />
-                              {ev.pagado ? t('records.paid') : t('records.pending')}
-                            </button>
+                            <>
+                              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                                {formatCurrency(ev.importe)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleTogglePaid(ev)}
+                                disabled={togglingPaidId === ev.id}
+                                title={ev.pagado ? t('records.markPending') : t('records.markPaid')}
+                                className={cn(
+                                  'flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors',
+                                  togglingPaidId === ev.id && 'opacity-50 cursor-wait',
+                                  ev.pagado
+                                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                                    : 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
+                                )}
+                              >
+                                {togglingPaidId === ev.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3 w-3" />
+                                )}
+                                {ev.pagado ? t('records.paid') : t('records.pending')}
+                              </button>
+                            </>
                           )}
                           {!isEditing && (
                             <button
@@ -777,14 +967,6 @@ const PatientPanel = ({
                 <p className="text-xs text-gray-300 dark:text-gray-600 italic py-1.5">
                   {t('dashboard.noTreatments')}
                 </p>
-              )}
-              {evolutions.length > 5 && (
-                <Link
-                  href={`/patients/${patient.id}`}
-                  className="block text-center text-xs text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 py-1 transition-colors"
-                >
-                  {t('dashboard.allNotes')} →
-                </Link>
               )}
             </div>
           )}
@@ -939,6 +1121,51 @@ const PatientPanel = ({
                 t('dashboard.confirmCancel')
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── All notes modal ───────────────────────────────────────────────────── */}
+      <Dialog open={showAllNotes} onOpenChange={open => setShowAllNotes(open)}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('dashboard.allNotesTitle')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            {sortedEvolutions.map((ev, idx) => (
+              <Fragment key={ev.id}>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{formatDate(ev.fecha, i18n.language)}</span>
+                    {ev.importe !== null && ev.importe !== undefined && (
+                      <span className="ml-auto text-xs font-semibold text-gray-600 dark:text-gray-300">
+                        {formatCurrency(ev.importe)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                    {ev.descripcion}
+                  </p>
+                  {ev.dientes.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {ev.dientes.map(d => (
+                        <span
+                          key={d}
+                          className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {idx < sortedEvolutions.length - 1 && (
+                  <hr className="border-gray-100 dark:border-gray-700" />
+                )}
+              </Fragment>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

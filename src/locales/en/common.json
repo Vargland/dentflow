@@ -166,7 +166,10 @@
     "saveChanges": "Save changes",
     "updated": "Record updated",
     "edited": "edited",
-    "editedAt": "Edited on {{date}}"
+    "editedAt": "Edited on {{date}}",
+    "markPaid": "Mark as paid",
+    "markPending": "Mark as pending",
+    "amountPlaceholder": "Amount"
   },
   "appointmentDetail": {
     "tabs": {
@@ -275,7 +278,9 @@
     "evolutionPlaceholder": "Describe the treatment performed, observations and next steps...",
     "teethTreated": "Teeth treated",
     "reopenAppointment": "Reopen appointment",
-    "reopenedSuccess": "Appointment reopened"
+    "reopenedSuccess": "Appointment reopened",
+    "balance": "Balance",
+    "balanceTotal": "Total"
   },
   "settings": {
     "title": "Settings",
