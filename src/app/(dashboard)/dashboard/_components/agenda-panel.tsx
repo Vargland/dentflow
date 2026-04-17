@@ -145,15 +145,25 @@ const AgendaPanel = ({
                 onClick={() => onSelect(appt)}
                 className={cn(
                   'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border cursor-pointer',
-                  // Active — strong blue, dominant
+                  // Active (scheduled + selected) — strong blue, dominant
                   isActive &&
                     'border-blue-300 bg-blue-50 dark:bg-blue-950/60 dark:border-blue-700 shadow-sm',
-                  // Completed — tenue green
+                  // Completed unselected — tenue green
                   isCompleted &&
+                    !isSelected &&
                     'border-green-100 bg-green-50/60 dark:bg-green-950/20 dark:border-green-900/40',
-                  // Cancelled — barely-there red, not dominant
+                  // Completed selected — slightly more intense green
+                  isCompleted &&
+                    isSelected &&
+                    'border-green-300 bg-green-100/80 dark:bg-green-900/30 dark:border-green-700/60 shadow-sm',
+                  // Cancelled unselected — barely-there red
                   isCancelled &&
+                    !isSelected &&
                     'border-red-100 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50',
+                  // Cancelled selected — slightly more visible red
+                  isCancelled &&
+                    isSelected &&
+                    'border-red-200 bg-red-100/70 dark:bg-red-950/40 dark:border-red-800/60 shadow-sm',
                   // Not selected, not done
                   !isSelected &&
                     !isDone &&
