@@ -144,13 +144,13 @@ const AgendaPanel = ({
                 type="button"
                 onClick={() => onSelect(appt)}
                 className={cn(
-                  'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border',
+                  'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border cursor-pointer',
                   // Active — strong blue, dominant
                   isActive &&
                     'border-blue-300 bg-blue-50 dark:bg-blue-950/60 dark:border-blue-700 shadow-sm',
-                  // Completed — very muted, almost gray
+                  // Completed — tenue green
                   isCompleted &&
-                    'border-gray-200 bg-gray-50 dark:bg-gray-800/40 dark:border-gray-700/60',
+                    'border-green-100 bg-green-50/60 dark:bg-green-950/20 dark:border-green-900/40',
                   // Cancelled — barely-there red, not dominant
                   isCancelled &&
                     'border-red-100 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50',
@@ -169,7 +169,7 @@ const AgendaPanel = ({
                         isActive
                           ? 'text-blue-600 dark:text-blue-400'
                           : isCompleted
-                            ? 'text-gray-400 dark:text-gray-500'
+                            ? 'text-green-500/70 dark:text-green-600/60'
                             : isCancelled
                               ? 'text-red-300 dark:text-red-800'
                               : 'text-gray-400 dark:text-gray-500'
@@ -185,7 +185,7 @@ const AgendaPanel = ({
                         isActive
                           ? 'text-blue-900 dark:text-blue-100'
                           : isCompleted
-                            ? 'text-gray-400 dark:text-gray-500'
+                            ? 'text-green-800/50 dark:text-green-300/40'
                             : isCancelled
                               ? 'text-gray-400 dark:text-gray-600 line-through'
                               : 'text-gray-800 dark:text-gray-200'
@@ -218,7 +218,7 @@ const AgendaPanel = ({
                       </span>
                     )}
                     {isCompleted && (
-                      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-medium text-green-600/60 dark:text-green-500/50 bg-green-100/60 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
                         ✓
                       </span>
                     )}
