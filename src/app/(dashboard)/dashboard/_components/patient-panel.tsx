@@ -348,7 +348,7 @@ const PatientPanel = ({
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
-  const recentEvolutions = evolutions.slice(0, 2)
+  const recentEvolutions = evolutions.slice(0, 2).reverse()
 
   const hasAlergias = Boolean(patient.alergias?.trim())
 
