@@ -1,5 +1,6 @@
 {
   "nav": {
+    "dashboard": "Agenda",
     "patients": "Pacientes",
     "appointments": "Turnos",
     "settings": "Configuracion",
@@ -208,6 +209,7 @@
       "status": "Estado",
       "notes": "Notas",
       "notesPlaceholder": "Notas adicionales...",
+      "emergencyOverlap": "Emergencia / sobre-turno (ignorar conflictos de horario)",
       "cancel": "Cancelar",
       "save": "Guardar",
       "saving": "Guardando...",

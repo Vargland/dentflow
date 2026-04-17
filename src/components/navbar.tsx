@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Calendar, Menu, Settings, Users, X } from 'lucide-react'
+import { Calendar, LayoutDashboard, Menu, Settings, Users, X } from 'lucide-react'
 
 import { useTranslation } from '@/lib/i18n/client'
 import type { Language } from '@/lib/i18n/settings'
@@ -37,6 +37,7 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
   const { t } = useTranslation()
 
   const navLinks = [
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/patients', label: t('nav.patients'), icon: Users },
     { href: '/appointments', label: t('nav.appointments'), icon: Calendar },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
@@ -55,7 +56,7 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/patients" className="flex items-center gap-2 font-bold text-blue-600 text-xl">
+        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-blue-600 text-xl">
           <span className="text-2xl">🦷</span>
           <span>DentFlow</span>
         </Link>

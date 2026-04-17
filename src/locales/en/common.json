@@ -1,5 +1,6 @@
 {
   "nav": {
+    "dashboard": "Dashboard",
     "patients": "Patients",
     "appointments": "Appointments",
     "settings": "Settings",
@@ -208,6 +209,7 @@
       "status": "Status",
       "notes": "Notes",
       "notesPlaceholder": "Additional notes...",
+      "emergencyOverlap": "Emergency / over-booking (ignore schedule conflicts)",
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving...",

@@ -106,6 +106,8 @@ export const AppointmentForm = ({
 
   const [notes, setNotes] = useState(appointment?.notes ?? '')
 
+  const [allowOverlap, setAllowOverlap] = useState(false)
+
   const [error, setError] = useState('')
 
   const [patients, setPatients] = useState<PatientListItem[]>([])
@@ -145,6 +147,7 @@ export const AppointmentForm = ({
       duration_minutes: durationMinutes > 0 ? durationMinutes : 30,
       status,
       notes: notes.trim() || null,
+      allow_overlap: allowOverlap || undefined,
     }
   }
 
@@ -315,6 +318,19 @@ export const AppointmentForm = ({
               rows={2}
             />
           </div>
+
+          {/* Emergency over-booking */}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={allowOverlap}
+              onChange={e => setAllowOverlap(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-orange-500 accent-orange-500"
+            />
+            <span className="text-sm font-medium text-orange-600">
+              {t('appointments.form.emergencyOverlap')}
+            </span>
+          </label>
 
           {error && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">

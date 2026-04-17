@@ -24,6 +24,8 @@ export interface CreateAppointmentInput {
   duration_minutes: number
   status: string
   notes?: string | null
+  /** When true, skips the overlap check — used for emergency over-bookings. */
+  allow_overlap?: boolean
 }
 
 /** Input for updating an existing appointment. */
