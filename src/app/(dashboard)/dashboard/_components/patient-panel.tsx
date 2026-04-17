@@ -85,7 +85,7 @@ const formatDate = (iso: string, lang: string): string =>
 
 /** Square avatar with patient initials. */
 const PatientAvatar = ({ nombre, apellido }: { nombre: string; apellido: string }) => (
-  <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+  <div className="h-12 w-12 rounded-none bg-blue-600 flex items-center justify-center shrink-0">
     <span className="text-white font-bold text-sm tracking-wide">{initials(nombre, apellido)}</span>
   </div>
 )
