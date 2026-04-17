@@ -50,6 +50,8 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   const [prefilledPatientId, setPrefilledPatientId] = useState<string | null>(null)
 
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
+
   // Odontogram modal state
   const [odontogramPatientId, setOdontogramPatientId] = useState<string | null>(null)
 
@@ -126,6 +128,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
     }
   }
 
+  /**
+   * Called when the appointment-edit form (triggered from PatientPanel) succeeds.
+   * Refreshes today's list and clears the editing state.
+   */
+  const handleEditSuccess = async () => {
+    setEditingAppointment(null)
+
+    await handleFormSuccess()
+  }
+
   /** Close the odontogram modal. */
   const handleCloseOdontogram = () => {
     setOdontogramPatientId(null)
@@ -158,6 +170,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
             onAppointmentUpdated={handleAppointmentUpdated}
             onScheduleAppointment={handleScheduleAppointment}
             onOpenOdontogram={handleOpenOdontogram}
+            onEditAppointment={appt => setEditingAppointment(appt)}
           />
         </div>
       </div>
@@ -174,6 +187,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
             setPrefilledPatientId(null)
           }}
+        />
+      )}
+
+      {/* Edit appointment modal (e.g. assign patient to an existing slot) */}
+      {editingAppointment && (
+        <AppointmentForm
+          appointment={editingAppointment}
+          timezone={timezone}
+          onSuccess={handleEditSuccess}
+          onClose={() => setEditingAppointment(null)}
         />
       )}
 

@@ -251,7 +251,8 @@
     "noShow": "No se presento",
     "finishing": "Finalizando...",
     "activePatient": "Paciente activo",
-    "viewFullRecord": "Ver ficha completa"
+    "viewFullRecord": "Ver ficha completa",
+    "assignPatient": "Asignar paciente"
   },
   "settings": {
     "title": "Configuracion",

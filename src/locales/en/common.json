@@ -251,7 +251,8 @@
     "noShow": "No-show",
     "finishing": "Finishing...",
     "activePatient": "Active patient",
-    "viewFullRecord": "Full record"
+    "viewFullRecord": "Full record",
+    "assignPatient": "Assign patient"
   },
   "settings": {
     "title": "Settings",

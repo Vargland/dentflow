@@ -14,6 +14,7 @@ import {
   Phone,
   ScanLine,
   Stethoscope,
+  UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -114,6 +115,8 @@ export interface PatientPanelProps {
   onScheduleAppointment: (patientId: string, patientName: string) => void
   /** Called when the user clicks "Abrir Odontograma". */
   onOpenOdontogram: (patientId: string) => void
+  /** Called when the user wants to edit the current appointment (e.g. assign a patient). */
+  onEditAppointment: (appointment: Appointment) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -132,6 +135,7 @@ const PatientPanel = ({
   onAppointmentUpdated,
   onScheduleAppointment,
   onOpenOdontogram,
+  onEditAppointment,
 }: PatientPanelProps) => {
   const { t, i18n } = useTranslation()
 
@@ -244,11 +248,25 @@ const PatientPanel = ({
 
   if (!appointment.patient_id) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-center px-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t('dashboard.noPatient')}</p>
-        <p className="text-base font-semibold text-gray-700 dark:text-gray-300 mt-2">
-          {appointment.title}
-        </p>
+      <div className="flex flex-col items-center justify-center h-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-center px-8 gap-4">
+        <div className="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <UserPlus className="h-8 w-8 text-gray-400" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
+            {appointment.title}
+          </p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t('dashboard.noPatient')}</p>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          type="button"
+          onClick={() => onEditAppointment(appointment)}
+        >
+          <UserPlus className="h-4 w-4" />
+          {t('dashboard.assignPatient')}
+        </Button>
       </div>
     )
   }
