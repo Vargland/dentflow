@@ -14,6 +14,7 @@ import {
   Mail,
   Phone,
   ScanLine,
+  Search,
   Stethoscope,
   UserPlus,
   X,
@@ -117,6 +118,8 @@ export interface PatientPanelProps {
   onScheduleAppointment: (patientId: string, patientName: string) => void
   /** Called when the user clicks "Abrir Odontograma". */
   onOpenOdontogram: (patientId: string) => void
+  /** Called when the user wants to edit the appointment (e.g. assign an existing patient). */
+  onEditAppointment: (appointment: Appointment) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -135,6 +138,7 @@ const PatientPanel = ({
   onAppointmentUpdated,
   onScheduleAppointment,
   onOpenOdontogram,
+  onEditAppointment,
 }: PatientPanelProps) => {
   const { t, i18n } = useTranslation()
 
@@ -259,11 +263,11 @@ const PatientPanel = ({
           </p>
           <p className="text-sm text-gray-400 dark:text-gray-500">{t('dashboard.noPatient')}</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-2 w-full">
           <Button
             type="button"
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => router.push('/patients/new')}
+            className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => router.push(`/patients/new?appointmentId=${appointment.id}`)}
           >
             <UserPlus className="h-4 w-4" />
             {t('patients.newPatient')}
@@ -271,7 +275,16 @@ const PatientPanel = ({
           <Button
             variant="outline"
             type="button"
-            className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
+            className="w-full gap-2"
+            onClick={() => onEditAppointment(appointment)}
+          >
+            <Search className="h-4 w-4" />
+            {t('dashboard.assignExistingPatient')}
+          </Button>
+          <Button
+            variant="outline"
+            type="button"
+            className="w-full gap-2 border-red-200 text-red-600 hover:bg-red-50"
             disabled={isUpdating}
             onClick={() => handleStatusUpdate('cancelled')}
           >

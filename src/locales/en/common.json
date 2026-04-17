@@ -252,7 +252,8 @@
     "finishing": "Finishing...",
     "activePatient": "Active patient",
     "viewFullRecord": "Full record",
-    "assignPatient": "Assign patient"
+    "assignPatient": "Assign patient",
+    "assignExistingPatient": "Search existing patient"
   },
   "settings": {
     "title": "Settings",

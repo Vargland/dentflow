@@ -25,6 +25,15 @@ export const listAppointments = (
   )
 
 /**
+ * Fetches a single appointment by ID.
+ *
+ * @param token - JWT Bearer token.
+ * @param id    - Appointment UUID.
+ */
+export const getAppointment = (token: string, id: string): Promise<Appointment> =>
+  apiClient.get<Appointment>(`/appointments/${id}`, token)
+
+/**
  * Creates a new appointment.
  *
  * @param token - JWT Bearer token.

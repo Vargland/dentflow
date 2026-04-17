@@ -50,6 +50,17 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   const [prefilledPatientId, setPrefilledPatientId] = useState<string | null>(null)
 
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
+
+  // Date navigation — start at today, shift ±1 day with arrows
+  const [viewDate, setViewDate] = useState<Date>(() => {
+    const d = new Date()
+
+    d.setHours(0, 0, 0, 0)
+
+    return d
+  })
+
   // Odontogram modal state
   const [odontogramPatientId, setOdontogramPatientId] = useState<string | null>(null)
 
@@ -73,25 +84,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
     setShowNewForm(true)
   }
 
-  /**
-   * Called when the new appointment form succeeds.
-   * Re-fetches today's appointments so the new one appears in the agenda.
-   */
-  const handleFormSuccess = async () => {
-    setShowNewForm(false)
-
-    setPrefilledPatientId(null)
-
+  /** Re-fetches appointments for the given date and updates state. */
+  const refreshAppointments = async (date: Date) => {
     if (!token) return
 
     try {
-      const now = new Date()
-
-      const startOfDay = new Date(now)
+      const startOfDay = new Date(date)
 
       startOfDay.setHours(0, 0, 0, 0)
 
-      const endOfDay = new Date(now)
+      const endOfDay = new Date(date)
 
       endOfDay.setHours(23, 59, 59, 999)
 
@@ -102,9 +104,63 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
       )
 
       setAppointments(sorted)
+
+      setSelectedId(sorted.find(a => a.status === 'scheduled')?.id ?? null)
     } catch {
       // Keep existing list if refresh fails
     }
+  }
+
+  /**
+   * Called when the new appointment form succeeds.
+   * Re-fetches appointments for the current view date.
+   */
+  const handleFormSuccess = async () => {
+    setShowNewForm(false)
+
+    setPrefilledPatientId(null)
+
+    await refreshAppointments(viewDate)
+  }
+
+  /** Navigate to the previous day. */
+  const handlePrevDay = async () => {
+    const prev = new Date(viewDate)
+
+    prev.setDate(prev.getDate() - 1)
+
+    setViewDate(prev)
+
+    await refreshAppointments(prev)
+  }
+
+  /** Navigate to the next day. */
+  const handleNextDay = async () => {
+    const next = new Date(viewDate)
+
+    next.setDate(next.getDate() + 1)
+
+    setViewDate(next)
+
+    await refreshAppointments(next)
+  }
+
+  /** Navigate back to today. */
+  const handleToday = async () => {
+    const today = new Date()
+
+    today.setHours(0, 0, 0, 0)
+
+    setViewDate(today)
+
+    await refreshAppointments(today)
+  }
+
+  /** Called after editing an appointment (e.g. assigning a patient). */
+  const handleEditSuccess = async () => {
+    setEditingAppointment(null)
+
+    await refreshAppointments(viewDate)
   }
 
   /** Open the odontogram modal for the given patient. */
@@ -142,12 +198,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
           <AgendaPanel
             appointments={appointments}
             selectedId={selectedId}
+            viewDate={viewDate}
             onSelect={appt => setSelectedId(appt.id)}
             onNewAppointment={() => {
               setPrefilledPatientId(null)
 
               setShowNewForm(true)
             }}
+            onPrevDay={handlePrevDay}
+            onNextDay={handleNextDay}
+            onToday={handleToday}
           />
         </div>
 
@@ -158,6 +218,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
             onAppointmentUpdated={handleAppointmentUpdated}
             onScheduleAppointment={handleScheduleAppointment}
             onOpenOdontogram={handleOpenOdontogram}
+            onEditAppointment={appt => setEditingAppointment(appt)}
           />
         </div>
       </div>
@@ -174,6 +235,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
             setPrefilledPatientId(null)
           }}
+        />
+      )}
+
+      {/* Edit appointment modal (assign existing patient) */}
+      {editingAppointment && (
+        <AppointmentForm
+          appointment={editingAppointment}
+          timezone={timezone}
+          onSuccess={handleEditSuccess}
+          onClose={() => setEditingAppointment(null)}
         />
       )}
 

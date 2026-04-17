@@ -252,7 +252,8 @@
     "finishing": "Finalizando...",
     "activePatient": "Paciente activo",
     "viewFullRecord": "Ver ficha completa",
-    "assignPatient": "Asignar paciente"
+    "assignPatient": "Asignar paciente",
+    "assignExistingPatient": "Buscar paciente existente"
   },
   "settings": {
     "title": "Configuracion",
