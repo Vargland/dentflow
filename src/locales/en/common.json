@@ -151,7 +151,7 @@
     "descriptionPlaceholder": "Description of the treatment performed...",
     "teethTreated": "Teeth treated",
     "teethHint": "Tooth number",
-    "teethPlaceholder": "e.g. 18,26",
+    "teethPlaceholder": "e.g. 18, 26",
     "amount": "Amount",
     "save": "Save record",
     "saving": "Saving...",

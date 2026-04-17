@@ -151,7 +151,7 @@
     "descriptionPlaceholder": "Descripcion del tratamiento realizado...",
     "teethTreated": "Dientes tratados",
     "teethHint": "Nro de pieza",
-    "teethPlaceholder": "Ej: 18,26",
+    "teethPlaceholder": "Ej: 18, 26",
     "amount": "Importe",
     "save": "Registrar evolucion",
     "saving": "Guardando...",
