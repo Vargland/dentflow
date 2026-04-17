@@ -12,6 +12,7 @@ import {
   Loader2,
   Mail,
   Phone,
+  ScanLine,
   Stethoscope,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -110,6 +111,8 @@ export interface PatientPanelProps {
   onAppointmentUpdated: (id: string, status: string) => void
   /** Called when the user wants to schedule a new appointment for this patient. */
   onScheduleAppointment: (patientId: string, patientName: string) => void
+  /** Called when the user clicks "Abrir Odontograma". */
+  onOpenOdontogram: (patientId: string) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -121,11 +124,13 @@ export interface PatientPanelProps {
  * @param appointment           - Currently selected appointment (null = nothing selected).
  * @param onAppointmentUpdated  - Callback after finish/no-show mutation.
  * @param onScheduleAppointment - Callback to open the appointment form for this patient.
+ * @param onOpenOdontogram      - Callback to open the odontogram modal for this patient.
  */
 const PatientPanel = ({
   appointment,
   onAppointmentUpdated,
   onScheduleAppointment,
+  onOpenOdontogram,
 }: PatientPanelProps) => {
   const { t, i18n } = useTranslation()
 
@@ -417,11 +422,15 @@ const PatientPanel = ({
       <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
         {/* Row 1: Odontogram + Schedule */}
         <div className="flex gap-2">
-          <Link href={`/patients/${patient.id}`} className="flex-1">
-            <Button variant="outline" className="w-full gap-2" type="button">
-              {t('dashboard.openOdontogram')}
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            className="flex-1 gap-2"
+            type="button"
+            onClick={() => onOpenOdontogram(patient.id)}
+          >
+            <ScanLine className="h-4 w-4" />
+            {t('dashboard.openOdontogram')}
+          </Button>
 
           <Button
             variant="outline"

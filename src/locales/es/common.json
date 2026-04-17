@@ -45,7 +45,7 @@
   },
   "patientDetail": {
     "edit": "Editar",
-    "yearsOld": "{{age}} anos",
+    "yearsOld": "{{age}} años",
     "tabs": {
       "odontogram": "Odontograma",
       "records": "Evoluciones",
@@ -241,7 +241,7 @@
     "alerts": "Alertas medicas",
     "actions": "Acciones",
     "openOdontogram": "Abrir odontograma",
-    "scheduleAppointment": "Agendar turno",
+    "scheduleAppointment": "Agendar otro turno",
     "finishAppointment": "Finalizar turno",
     "noShow": "No se presento",
     "finishing": "Finalizando...",

@@ -1,9 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { Loader2 } from 'lucide-react'
 
 import type { Appointment } from '@/typing/services/appointment.interface'
+import type { OdontogramState } from '@/typing/services/odontogram.interface'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import Odontogram from '@/components/odontogram/odontogram'
 import { AppointmentForm } from '@/app/(dashboard)/appointments/_components/appointment-form'
+import { listAppointments } from '@/services/appointments.service'
+import { getOdontogram } from '@/services/odontogram.service'
 
 import AgendaPanel from './agenda-panel'
 import PatientPanel from './patient-panel'
@@ -28,6 +35,10 @@ export interface DashboardShellProps {
  * @param timezone            - Doctor's IANA timezone for time display.
  */
 const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) => {
+  const { data: session } = useSession()
+
+  const token = (session?.accessToken as string) ?? ''
+
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments)
 
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -38,6 +49,13 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
   const [showNewForm, setShowNewForm] = useState(false)
 
   const [prefilledPatientId, setPrefilledPatientId] = useState<string | null>(null)
+
+  // Odontogram modal state
+  const [odontogramPatientId, setOdontogramPatientId] = useState<string | null>(null)
+
+  const [odontogramData, setOdontogramData] = useState<OdontogramState | null>(null)
+
+  const [odontogramLoading, setOdontogramLoading] = useState(false)
 
   const selectedAppointment = appointments.find(a => a.id === selectedId) ?? null
 
@@ -55,12 +73,64 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
     setShowNewForm(true)
   }
 
-  /** Called when the new appointment form succeeds. */
-  const handleFormSuccess = () => {
+  /**
+   * Called when the new appointment form succeeds.
+   * Re-fetches today's appointments so the new one appears in the agenda.
+   */
+  const handleFormSuccess = async () => {
     setShowNewForm(false)
 
     setPrefilledPatientId(null)
-    // No need to refresh — new appointment likely isn't today or not relevant
+
+    if (!token) return
+
+    try {
+      const now = new Date()
+
+      const startOfDay = new Date(now)
+
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const endOfDay = new Date(now)
+
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const fresh = await listAppointments(token, startOfDay.toISOString(), endOfDay.toISOString())
+
+      const sorted = [...fresh].sort(
+        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      )
+
+      setAppointments(sorted)
+    } catch {
+      // Keep existing list if refresh fails
+    }
+  }
+
+  /** Open the odontogram modal for the given patient. */
+  const handleOpenOdontogram = async (patientId: string) => {
+    setOdontogramPatientId(patientId)
+
+    setOdontogramData(null)
+
+    setOdontogramLoading(true)
+
+    try {
+      const res = await getOdontogram(token, patientId)
+
+      setOdontogramData((res.data as OdontogramState) ?? null)
+    } catch {
+      setOdontogramData(null)
+    } finally {
+      setOdontogramLoading(false)
+    }
+  }
+
+  /** Close the odontogram modal. */
+  const handleCloseOdontogram = () => {
+    setOdontogramPatientId(null)
+
+    setOdontogramData(null)
   }
 
   return (
@@ -87,6 +157,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
             appointment={selectedAppointment}
             onAppointmentUpdated={handleAppointmentUpdated}
             onScheduleAppointment={handleScheduleAppointment}
+            onOpenOdontogram={handleOpenOdontogram}
           />
         </div>
       </div>
@@ -104,6 +175,29 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
             setPrefilledPatientId(null)
           }}
         />
+      )}
+
+      {/* Odontogram modal */}
+      {odontogramPatientId && (
+        <Dialog open onOpenChange={open => !open && handleCloseOdontogram()}>
+          <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Odontograma</DialogTitle>
+            </DialogHeader>
+
+            {odontogramLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <Odontogram
+                patientId={odontogramPatientId}
+                initialData={odontogramData}
+                token={token}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </>
   )
