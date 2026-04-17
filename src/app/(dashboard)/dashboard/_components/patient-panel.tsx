@@ -83,10 +83,10 @@ const formatDate = (iso: string, lang: string): string =>
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-/** Large avatar circle with patient initials. */
+/** Square avatar with patient initials. */
 const PatientAvatar = ({ nombre, apellido }: { nombre: string; apellido: string }) => (
-  <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-md">
-    <span className="text-white font-bold text-base">{initials(nombre, apellido)}</span>
+  <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+    <span className="text-white font-bold text-sm tracking-wide">{initials(nombre, apellido)}</span>
   </div>
 )
 
@@ -426,7 +426,7 @@ const PatientPanel = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="font-heading text-2xl text-gray-900 dark:text-gray-100 leading-tight truncate">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate">
               {patient.apellido}, {patient.nombre}
             </h2>
             <Link

@@ -130,7 +130,11 @@ const AgendaPanel = ({
           appointments.map(appt => {
             const isSelected = appt.id === selectedId
 
-            const isDone = appt.status === 'completed' || appt.status === 'cancelled'
+            const isCompleted = appt.status === 'completed'
+
+            const isCancelled = appt.status === 'cancelled'
+
+            const isDone = isCompleted || isCancelled
 
             const isActive = isSelected && appt.status === 'scheduled'
 
@@ -141,21 +145,18 @@ const AgendaPanel = ({
                 onClick={() => onSelect(appt)}
                 className={cn(
                   'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border',
-                  // Active / selected patient — visually dominant
+                  // Active — soft blue, not full saturated
                   isActive &&
-                    'border-blue-500 bg-blue-600 shadow-md shadow-blue-200 dark:shadow-blue-950',
-                  // Selected but done
-                  isSelected &&
-                    isDone &&
-                    'border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800',
+                    'border-blue-300 bg-blue-50 dark:bg-blue-950/60 dark:border-blue-700 shadow-sm',
+                  // Completed — soft green
+                  isCompleted &&
+                    'border-green-200 bg-green-50 dark:bg-green-950/40 dark:border-green-800',
+                  // Cancelled — soft red
+                  isCancelled && 'border-red-200 bg-red-50 dark:bg-red-950/40 dark:border-red-800',
                   // Not selected, not done
                   !isSelected &&
                     !isDone &&
-                    'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-blue-200 dark:hover:border-blue-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/30',
-                  // Not selected, done
-                  !isSelected &&
-                    isDone &&
-                    'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 opacity-45 hover:opacity-60'
+                    'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-blue-200 dark:hover:border-blue-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/30'
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -164,7 +165,13 @@ const AgendaPanel = ({
                     <p
                       className={cn(
                         'text-xs font-bold tabular-nums mb-0.5',
-                        isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : isCompleted
+                            ? 'text-green-600 dark:text-green-400'
+                            : isCancelled
+                              ? 'text-red-400 dark:text-red-400'
+                              : 'text-gray-400 dark:text-gray-500'
                       )}
                     >
                       {toLocalTime(appt.start_time)}
@@ -174,7 +181,13 @@ const AgendaPanel = ({
                     <p
                       className={cn(
                         'text-sm font-semibold truncate leading-snug',
-                        isActive ? 'text-white' : 'text-gray-800 dark:text-gray-200'
+                        isActive
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : isCompleted
+                            ? 'text-green-900 dark:text-green-100'
+                            : isCancelled
+                              ? 'text-red-700 dark:text-red-300 line-through'
+                              : 'text-gray-800 dark:text-gray-200'
                       )}
                     >
                       {appt.patient_name ?? appt.title}
@@ -185,7 +198,9 @@ const AgendaPanel = ({
                       <p
                         className={cn(
                           'text-xs truncate mt-0.5',
-                          isActive ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'
+                          isActive
+                            ? 'text-blue-500 dark:text-blue-400'
+                            : 'text-gray-400 dark:text-gray-500'
                         )}
                       >
                         {appt.title}
@@ -196,19 +211,19 @@ const AgendaPanel = ({
                   {/* Status badge */}
                   <div className="shrink-0 mt-0.5">
                     {isActive && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-full">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                         {t('dashboard.inProgress')}
                       </span>
                     )}
-                    {appt.status === 'completed' && !isSelected && (
-                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 px-2 py-0.5 rounded-full">
+                    {isCompleted && (
+                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
                         ✓
                       </span>
                     )}
-                    {appt.status === 'cancelled' && !isSelected && (
-                      <span className="text-[10px] font-medium text-gray-400 line-through px-1">
-                        —
+                    {isCancelled && (
+                      <span className="text-[10px] font-medium text-red-400 dark:text-red-400 bg-red-100 dark:bg-red-900 px-2 py-0.5 rounded-full">
+                        ✕
                       </span>
                     )}
                   </div>
