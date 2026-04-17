@@ -551,20 +551,6 @@ const PatientPanel = ({
 
   const recentEvolutions = sortedEvolutions.slice(0, 5)
 
-  // ── Balance calculation ──────────────────────────────────────────────────────
-
-  const evWithImporte = evolutions.filter(e => e.importe !== null && e.importe !== undefined)
-
-  const totalAmount = evWithImporte.reduce((sum, e) => sum + (e.importe ?? 0), 0)
-
-  const paidAmount = evWithImporte
-    .filter(e => e.pagado)
-    .reduce((sum, e) => sum + (e.importe ?? 0), 0)
-
-  const pendingAmount = totalAmount - paidAmount
-
-  const hasBalance = evWithImporte.length > 0
-
   /**
    * Formats a number as a localised currency string.
    *
@@ -663,50 +649,6 @@ const PatientPanel = ({
 
       {/* ── C. PRIMARY ACTION AREA ────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        {/* Balance panel */}
-        {hasBalance && (
-          <div className="px-5 pt-4">
-            <div className="rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
-                {t('dashboard.balance')}
-              </p>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
-                    {t('dashboard.balanceTotal')}
-                  </p>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {formatCurrency(totalAmount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
-                    {t('records.paid')}
-                  </p>
-                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                    {formatCurrency(paidAmount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
-                    {t('records.pending')}
-                  </p>
-                  <p
-                    className={cn(
-                      'text-sm font-semibold',
-                      pendingAmount > 0
-                        ? 'text-orange-500 dark:text-orange-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    )}
-                  >
-                    {formatCurrency(pendingAmount)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="px-5 pt-5 pb-4 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             {t('dashboard.newEvolution')}
