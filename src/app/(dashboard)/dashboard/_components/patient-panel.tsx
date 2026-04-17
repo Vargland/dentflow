@@ -348,7 +348,7 @@ const PatientPanel = ({
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
-  const recentEvolutions = evolutions.slice(0, 2).reverse()
+  const recentEvolutions = evolutions.slice(0, 5).reverse()
 
   const hasAlergias = Boolean(patient.alergias?.trim())
 
@@ -445,7 +445,7 @@ const PatientPanel = ({
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {t('dashboard.lastTreatments')}
             </p>
-            {evolutions.length > 2 && (
+            {evolutions.length > 5 && (
               <button
                 type="button"
                 onClick={() => setShowAllNotes(true)}
