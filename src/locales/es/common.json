@@ -243,6 +243,8 @@
     "noTreatments": "Sin tratamientos previos",
     "allNotes": "Ver todas las notas",
     "allNotesTitle": "Historial de tratamientos",
+    "sortOldest": "Antiguas primero",
+    "sortNewest": "Recientes primero",
     "alerts": "Alertas medicas",
     "actions": "Acciones",
     "openOdontogram": "Abrir odontograma",

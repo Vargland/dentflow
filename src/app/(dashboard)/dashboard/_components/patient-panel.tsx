@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react'
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowDownUp,
   Calendar,
   Clock,
   ExternalLink,
@@ -164,6 +165,8 @@ const PatientPanel = ({
   const [evolutionText, setEvolutionText] = useState('')
 
   const [evolutionTeeth, setEvolutionTeeth] = useState('')
+
+  const [evolutionSortAsc, setEvolutionSortAsc] = useState(true)
 
   const [isUpdating, startUpdate] = useTransition()
 
@@ -360,7 +363,9 @@ const PatientPanel = ({
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
-  const recentEvolutions = evolutions.slice(0, 5).reverse()
+  const sortedEvolutions = evolutionSortAsc ? [...evolutions].reverse() : evolutions
+
+  const recentEvolutions = sortedEvolutions.slice(0, 5)
 
   const hasAlergias = Boolean(patient.alergias?.trim())
 
@@ -457,15 +462,26 @@ const PatientPanel = ({
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {t('dashboard.lastTreatments')}
             </p>
-            {evolutions.length > 5 && (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setShowAllNotes(true)}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => setEvolutionSortAsc(v => !v)}
+                className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title={evolutionSortAsc ? 'Más recientes primero' : 'Más antiguas primero'}
               >
-                {t('dashboard.allNotes')}
+                <ArrowDownUp className="h-3.5 w-3.5" />
+                {evolutionSortAsc ? t('dashboard.sortOldest') : t('dashboard.sortNewest')}
               </button>
-            )}
+              {evolutions.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllNotes(true)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {t('dashboard.allNotes')}
+                </button>
+              )}
+            </div>
           </div>
 
           {recentEvolutions.length > 0 ? (
@@ -693,7 +709,7 @@ const PatientPanel = ({
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-            {evolutions.map((ev, idx) => (
+            {sortedEvolutions.map((ev, idx) => (
               <Fragment key={ev.id}>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
@@ -716,7 +732,7 @@ const PatientPanel = ({
                     </div>
                   )}
                 </div>
-                {idx < evolutions.length - 1 && (
+                {idx < sortedEvolutions.length - 1 && (
                   <hr className="border-gray-100 dark:border-gray-700" />
                 )}
               </Fragment>
