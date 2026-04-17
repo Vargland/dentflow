@@ -1,14 +1,14 @@
 /**
- * Local types for OdontogramV2.
- * These are distinct from the API-level types in @/typing/services/odontogram.interface
- * to allow richer per-surface and whole-tooth marks.
+ * Local types and colour constants for the Odontogram component.
+ * Distinct from the API-level types in @/typing/services/odontogram.interface
+ * to support richer per-surface and whole-tooth marks.
  */
 
 /** Five clickable surfaces on each tooth (FDI convention). */
 export type Surface = 'V' | 'P' | 'M' | 'D' | 'O'
 
 /**
- * Clinical mark types supported by the v2 odontogram.
+ * Clinical mark types supported by the odontogram.
  * Surface-level tools: caries | restauracion
  * Whole-tooth tools:   corona | extraccion | endodoncia | ausente
  */
@@ -29,7 +29,7 @@ export interface ToothState {
 }
 
 /** Full odontogram state: FDI number → per-tooth state. */
-export type OdontogramV2State = Record<number, ToothState>
+export type OdontogramData = Record<number, ToothState>
 
 /** Active tool the user is painting with. */
 export type ActiveTool = MarkType
@@ -45,9 +45,12 @@ export interface OdontogramMetrics {
   sanos: number
 }
 
-/** Colour config entry for a single tool. */
-export interface ToolConfig {
-  tool: MarkType
-  color: string
-  labelKey: string
+/** Colour assigned to each clinical mark tool. */
+export const TOOL_COLORS: Record<MarkType, string> = {
+  caries: '#E24B4A',
+  restauracion: '#185FA5',
+  corona: '#BA7517',
+  extraccion: '#5F5E5A',
+  endodoncia: '#639922',
+  ausente: '#B4B2A9',
 }

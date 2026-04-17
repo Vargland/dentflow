@@ -1,7 +1,6 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
 import type { OdontogramProps } from '@/typing/components/odontogram.types'
@@ -10,10 +9,9 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { saveOdontogram } from '@/services/odontogram.service'
 
-import { exportToPNG } from './export-png'
-import ToothCanvas from './tooth-canvas'
-import { TOOL_COLORS } from './tooth-geometry'
+import ToothSVG from './tooth-svg'
 import type { ActiveTool, MarkType, Surface, ToothState } from './types'
+import { TOOL_COLORS } from './types'
 import {
   PERMANENT_LOWER,
   PERMANENT_UPPER,
@@ -22,35 +20,40 @@ import {
   useOdontogramState,
 } from './use-odontogram-state'
 
-// ── Tool configuration ────────────────────────────────────────────────────────
+// ── Tool list ─────────────────────────────────────────────────────────────────
 
-interface ToolEntry {
-  tool: MarkType
-  labelEs: string
-  labelEn: string
-}
-
-const TOOLS: ToolEntry[] = [
-  { tool: 'caries', labelEs: 'Caries', labelEn: 'Caries' },
-  { tool: 'restauracion', labelEs: 'Restauracion', labelEn: 'Restoration' },
-  { tool: 'corona', labelEs: 'Corona', labelEn: 'Crown' },
-  { tool: 'extraccion', labelEs: 'Extraccion', labelEn: 'Extraction' },
-  { tool: 'endodoncia', labelEs: 'Endodoncia', labelEn: 'Root canal' },
-  { tool: 'ausente', labelEs: 'Ausente', labelEn: 'Absent' },
+/** All available clinical tools (order determines toolbar display). */
+const TOOL_KEYS: MarkType[] = [
+  'caries',
+  'restauracion',
+  'corona',
+  'extraccion',
+  'endodoncia',
+  'ausente',
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-interface ToothGroupProps {
+interface ToothRowProps {
+  /** FDI numbers to render in order. */
   teeth: number[]
+  /** Full state map keyed by FDI number. */
   stateMap: Record<number, ToothState>
-  isDark: boolean
+  /** Whether the row belongs to the upper arch (number label above). */
   isUpper: boolean
+  /** Callback when the user clicks a surface. */
   onSurfaceClick: (fdi: number, surface: Surface) => void
 }
 
-/** Renders a horizontal row of tooth canvases. */
-const ToothRow = ({ teeth, stateMap, isDark, isUpper, onSurfaceClick }: ToothGroupProps) => (
+/**
+ * Renders a horizontal row of SVG teeth.
+ *
+ * @param teeth          - FDI numbers to render.
+ * @param stateMap       - Full odontogram state map.
+ * @param isUpper        - True if this row belongs to the upper arch.
+ * @param onSurfaceClick - Surface click callback.
+ */
+const ToothRow = ({ teeth, stateMap, isUpper, onSurfaceClick }: ToothRowProps) => (
   <div className="flex justify-center gap-1 flex-wrap">
     {teeth.map(fdi => (
       <div key={fdi} className="flex flex-col items-center gap-0.5">
@@ -59,7 +62,7 @@ const ToothRow = ({ teeth, stateMap, isDark, isUpper, onSurfaceClick }: ToothGro
             {fdi}
           </span>
         )}
-        <ToothCanvas
+        <ToothSVG
           fdi={fdi}
           state={
             stateMap[fdi] ?? {
@@ -67,7 +70,6 @@ const ToothRow = ({ teeth, stateMap, isDark, isUpper, onSurfaceClick }: ToothGro
               surfaces: { V: null, P: null, M: null, D: null, O: null },
             }
           }
-          isDark={isDark}
           onSurfaceClick={surface => onSurfaceClick(fdi, surface)}
         />
         {!isUpper && (
@@ -82,11 +84,21 @@ const ToothRow = ({ teeth, stateMap, isDark, isUpper, onSurfaceClick }: ToothGro
 
 // ── Midline divider ───────────────────────────────────────────────────────────
 
-const Midline = () => (
+interface MidlineProps {
+  /** Translated midline label. */
+  label: string
+}
+
+/**
+ * Horizontal dashed midline divider with a centred label.
+ *
+ * @param label - Translated text shown between the dashes.
+ */
+const Midline = ({ label }: MidlineProps) => (
   <div className="flex items-center gap-2 my-1">
     <div className="flex-1 border-t border-dashed border-gray-300 dark:border-gray-600" />
     <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest whitespace-nowrap">
-      línea media
+      {label}
     </span>
     <div className="flex-1 border-t border-dashed border-gray-300 dark:border-gray-600" />
   </div>
@@ -94,28 +106,41 @@ const Midline = () => (
 
 // ── Section label ─────────────────────────────────────────────────────────────
 
-const SectionLabel = ({ label }: { label: string }) => (
+interface SectionLabelProps {
+  /** Text to display. */
+  label: string
+}
+
+/**
+ * Small all-caps section heading.
+ *
+ * @param label - Text to display.
+ */
+const SectionLabel = ({ label }: SectionLabelProps) => (
   <p className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 text-center uppercase tracking-widest">
     {label}
   </p>
 )
 
-// ── OdontogramV2 ─────────────────────────────────────────────────────────────
+// ── Odontogram ────────────────────────────────────────────────────────────────
 
 /**
- * Enhanced canvas-based clinical odontogram (v2).
- * Drop-in replacement for the legacy SVG Odontogram component.
+ * Interactive SVG-based clinical odontogram.
+ * Shared component used in the patient detail page and appointment detail modal.
+ *
+ * Features:
+ * - 5 individually clickable surfaces per tooth (M, D, V, P, O)
+ * - Whole-tooth marks: corona, extraccion, endodoncia, ausente
+ * - Permanent and temporary dentition tabs
+ * - Metrics summary (caries, restorations, absent, healthy)
+ * - LocalStorage persistence + API save
  *
  * @param patientId   - UUID of the patient (also used as localStorage key).
  * @param initialData - Pre-fetched odontogram state from the API, may be null.
  * @param token       - JWT Bearer token for API calls.
  */
-const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
+const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
   const { t } = useTranslation()
-
-  const { resolvedTheme } = useTheme()
-
-  const isDark = resolvedTheme === 'dark'
 
   const [pending, startTransition] = useTransition()
 
@@ -145,10 +170,6 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
     })
   }
 
-  const handleExport = () => {
-    exportToPNG(teeth, patientId)
-  }
-
   // Selected tooth info for the right panel
   const selectedState = selectedTooth ? teeth[selectedTooth] : null
 
@@ -162,7 +183,7 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-4">
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        {TOOLS.map(({ tool, labelEn }) => (
+        {TOOL_KEYS.map(tool => (
           <button
             key={tool}
             type="button"
@@ -178,7 +199,7 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
               className="h-3 w-3 rounded-sm border border-gray-300 dark:border-gray-500 shrink-0"
               style={{ backgroundColor: TOOL_COLORS[tool] }}
             />
-            {labelEn}
+            {t(`odontogram.tools.${tool}`)}
           </button>
         ))}
 
@@ -187,7 +208,7 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
           onClick={clearAll}
           className="ml-auto px-2.5 py-1 rounded-full border border-red-200 dark:border-red-800 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
         >
-          Limpiar todo
+          {t('odontogram.clearAll')}
         </button>
       </div>
 
@@ -205,7 +226,7 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             )}
           >
-            {d === 'permanent' ? 'Permanente' : 'Temporal'}
+            {t(`odontogram.${d}`)}
           </button>
         ))}
       </div>
@@ -220,15 +241,13 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
               <ToothRow
                 teeth={PERMANENT_UPPER}
                 stateMap={teeth}
-                isDark={isDark}
                 isUpper
                 onSurfaceClick={handleSurfaceClick}
               />
-              <Midline />
+              <Midline label={t('odontogram.midline')} />
               <ToothRow
                 teeth={PERMANENT_LOWER}
                 stateMap={teeth}
-                isDark={isDark}
                 isUpper={false}
                 onSurfaceClick={handleSurfaceClick}
               />
@@ -236,23 +255,21 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
             </>
           ) : (
             <>
-              <SectionLabel label="Superior temporal" />
+              <SectionLabel label={t('odontogram.upperTemp')} />
               <ToothRow
                 teeth={TEMPORARY_UPPER}
                 stateMap={teeth}
-                isDark={isDark}
                 isUpper
                 onSurfaceClick={handleSurfaceClick}
               />
-              <Midline />
+              <Midline label={t('odontogram.midline')} />
               <ToothRow
                 teeth={TEMPORARY_LOWER}
                 stateMap={teeth}
-                isDark={isDark}
                 isUpper={false}
                 onSurfaceClick={handleSurfaceClick}
               />
-              <SectionLabel label="Inferior temporal" />
+              <SectionLabel label={t('odontogram.lowerTemp')} />
             </>
           )}
         </div>
@@ -262,28 +279,30 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
           {/* Legend */}
           <div className="space-y-1">
             <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-              Leyenda
+              {t('odontogram.legend')}
             </p>
-            {TOOLS.map(({ tool, labelEn }) => (
+            {TOOL_KEYS.map(tool => (
               <div key={tool} className="flex items-center gap-1.5">
                 <span
                   className="h-2.5 w-2.5 rounded-sm shrink-0"
                   style={{ backgroundColor: TOOL_COLORS[tool] }}
                 />
-                <span className="text-[10px] text-gray-600 dark:text-gray-300">{labelEn}</span>
+                <span className="text-[10px] text-gray-600 dark:text-gray-300">
+                  {t(`odontogram.tools.${tool}`)}
+                </span>
               </div>
             ))}
           </div>
 
           {/* Selected tooth info */}
-          {selectedTooth && selectedState && (
+          {selectedTooth !== null && selectedState !== null && (
             <div className="space-y-1 border-t border-gray-100 dark:border-gray-700 pt-3">
               <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                Diente {selectedTooth}
+                {t('odontogram.tooth', { number: selectedTooth })}
               </p>
-              {selectedState.mark && (
+              {selectedState.mark !== null && (
                 <p className="text-[10px] text-gray-700 dark:text-gray-300">
-                  Marca:{' '}
+                  {t('odontogram.toothMark')}:{' '}
                   <span style={{ color: TOOL_COLORS[selectedState.mark] }}>
                     {selectedState.mark}
                   </span>
@@ -298,8 +317,10 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
                   ))}
                 </ul>
               ) : (
-                !selectedState.mark && (
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500">Sano</p>
+                selectedState.mark === null && (
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                    {t('odontogram.toothHealthy')}
+                  </p>
                 )
               )}
             </div>
@@ -309,20 +330,22 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
 
       {/* ── Metrics row ─────────────────────────────────────────────────────── */}
       <div className="flex gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
-        {[
-          { label: 'Caries', value: metrics.caries, color: TOOL_COLORS.caries },
-          {
-            label: 'Restauraciones',
-            value: metrics.restauraciones,
-            color: TOOL_COLORS.restauracion,
-          },
-          { label: 'Ausentes', value: metrics.ausentes, color: TOOL_COLORS.ausente },
-          { label: 'Sanos', value: metrics.sanos, color: '#16a34a' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="flex items-center gap-1.5">
+        {(
+          [
+            { key: 'caries', value: metrics.caries, color: TOOL_COLORS.caries },
+            {
+              key: 'restauraciones',
+              value: metrics.restauraciones,
+              color: TOOL_COLORS.restauracion,
+            },
+            { key: 'ausentes', value: metrics.ausentes, color: TOOL_COLORS.ausente },
+            { key: 'sanos', value: metrics.sanos, color: '#16a34a' },
+          ] as const
+        ).map(({ key, value, color }) => (
+          <div key={key} className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {label}:{' '}
+              {t(`odontogram.metrics.${key}`)}:{' '}
               <span className="font-semibold text-gray-800 dark:text-gray-200">{value}</span>
             </span>
           </div>
@@ -330,10 +353,7 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
       </div>
 
       {/* ── Actions ─────────────────────────────────────────────────────────── */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={handleExport} type="button">
-          Exportar PNG
-        </Button>
+      <div className="flex justify-end">
         <Button onClick={handleSave} disabled={!dirty || pending} size="sm" type="button">
           {pending ? t('odontogram.saving') : t('odontogram.save')}
         </Button>
@@ -342,4 +362,4 @@ const OdontogramV2 = ({ patientId, initialData, token }: OdontogramProps) => {
   )
 }
 
-export default OdontogramV2
+export default Odontogram

@@ -48,11 +48,11 @@ export interface ToothSVGProps {
  * No canvas, no hit-testing math, no devicePixelRatio.
  *
  * Surface layout (40×40):
- *  - M (Mesial)      = top triangle:    (0,0)→(40,0)→(20,12)
- *  - D (Distal)      = bottom triangle: (0,40)→(40,40)→(20,28)
- *  - V (Vestibular)  = left triangle:   (0,0)→(0,40)→(12,20)
- *  - P (Palatino)    = right triangle:  (40,0)→(40,40)→(28,20)
- *  - O (Oclusal)     = center square:   (12,12) 16×16
+ *  - M (Mesial)      = top trapezoid:    (0,0)→(40,0)→(30,10)→(10,10)
+ *  - D (Distal)      = bottom trapezoid: (0,40)→(40,40)→(30,30)→(10,30)
+ *  - V (Vestibular)  = left trapezoid:   (0,0)→(10,10)→(10,30)→(0,40)
+ *  - P (Palatino)    = right trapezoid:  (40,0)→(40,40)→(30,30)→(30,10)
+ *  - O (Oclusal)     = center square:    (10,10) 20×20
  *
  * @param fdi            - FDI tooth number (used for aria-label).
  * @param state          - Current tooth state (surfaces + whole-tooth mark).

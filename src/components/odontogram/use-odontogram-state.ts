@@ -8,22 +8,27 @@ import type {
   ActiveTool,
   DentitionType,
   MarkType,
+  OdontogramData,
   OdontogramMetrics,
-  OdontogramV2State,
   Surface,
   ToothState,
 } from './types'
 
 // ── FDI tooth layouts ──────────────────────────────────────────────────────────
 
+/** Upper permanent teeth (right → left, FDI). */
 export const PERMANENT_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 
+/** Lower permanent teeth (right → left, FDI). */
 export const PERMANENT_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
 
+/** Upper temporary teeth (right → left, FDI). */
 export const TEMPORARY_UPPER = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]
 
+/** Lower temporary teeth (right → left, FDI). */
 export const TEMPORARY_LOWER = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]
 
+/** All FDI tooth numbers tracked by the odontogram. */
 export const ALL_TEETH = [
   ...PERMANENT_UPPER,
   ...PERMANENT_LOWER,
@@ -43,6 +48,9 @@ const blankTooth = (): ToothState => ({
 /**
  * Maps the legacy API surface state string to the v2 MarkType or null.
  * Only caries/cavity and filled/restauracion have equivalents; other states are ignored.
+ *
+ * @param s - Legacy surface state string from the API.
+ * @returns Corresponding MarkType or null.
  */
 const legacySurfaceToMark = (s: string | undefined): MarkType | null => {
   if (!s) return null
@@ -60,9 +68,14 @@ const legacySurfaceToMark = (s: string | undefined): MarkType | null => {
   return null
 }
 
-/** Build the initial v2 state from the API OdontogramState (may be null). */
-const buildInitialState = (initialData: OdontogramState | null): OdontogramV2State => {
-  const result: OdontogramV2State = {}
+/**
+ * Build the initial odontogram state from the API OdontogramState (may be null).
+ *
+ * @param initialData - Pre-fetched odontogram state from the API.
+ * @returns Full OdontogramData keyed by FDI number.
+ */
+const buildInitialState = (initialData: OdontogramState | null): OdontogramData => {
+  const result: OdontogramData = {}
 
   for (const fdi of ALL_TEETH) {
     const legacyTooth = initialData?.[fdi]
@@ -75,7 +88,7 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramV2Sta
 
     const tooth = blankTooth()
 
-    // Map legacy API surfaces (V, L→P, M, D, O) to v2 surfaces
+    // Map legacy API surfaces (V, L→P, M, D, O) to current surfaces
     const legacySurfaces: Array<[keyof typeof legacyTooth, Surface]> = [
       ['V', 'V'],
       ['L', 'P'],
@@ -94,8 +107,13 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramV2Sta
   return result
 }
 
-/** Persist the v2 state to localStorage. */
-const persist = (patientId: string, state: OdontogramV2State) => {
+/**
+ * Persist the odontogram state to localStorage.
+ *
+ * @param patientId - UUID of the patient (used as localStorage key).
+ * @param state     - Full odontogram state to persist.
+ */
+const persist = (patientId: string, state: OdontogramData) => {
   try {
     localStorage.setItem(`odontogram_${patientId}`, JSON.stringify(state))
   } catch {
@@ -103,14 +121,19 @@ const persist = (patientId: string, state: OdontogramV2State) => {
   }
 }
 
-/** Load persisted v2 state from localStorage. */
-const loadPersisted = (patientId: string): OdontogramV2State | null => {
+/**
+ * Load persisted odontogram state from localStorage.
+ *
+ * @param patientId - UUID of the patient.
+ * @returns Persisted state or null if not found.
+ */
+const loadPersisted = (patientId: string): OdontogramData | null => {
   try {
     const raw = localStorage.getItem(`odontogram_${patientId}`)
 
     if (!raw) return null
 
-    return JSON.parse(raw) as OdontogramV2State
+    return JSON.parse(raw) as OdontogramData
   } catch {
     return null
   }
@@ -118,8 +141,13 @@ const loadPersisted = (patientId: string): OdontogramV2State | null => {
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
 
-/** Derive aggregated metrics from the full odontogram state. */
-const computeMetrics = (state: OdontogramV2State): OdontogramMetrics => {
+/**
+ * Derive aggregated metrics from the full odontogram state.
+ *
+ * @param state - Full odontogram state.
+ * @returns Computed metric counters.
+ */
+const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
   let caries = 0
 
   let restauraciones = 0
@@ -159,9 +187,10 @@ const computeMetrics = (state: OdontogramV2State): OdontogramMetrics => {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
+/** Return type for useOdontogramState. */
 export interface UseOdontogramStateReturn {
   /** Current full state. */
-  teeth: OdontogramV2State
+  teeth: OdontogramData
   /** The tool the user is actively painting with. */
   activeTool: ActiveTool
   /** Which dentition tab is visible. */
@@ -197,7 +226,7 @@ export const useOdontogramState = (
   patientId: string,
   initialData: OdontogramState | null
 ): UseOdontogramStateReturn => {
-  const [teeth, setTeeth] = useState<OdontogramV2State>(() => {
+  const [teeth, setTeeth] = useState<OdontogramData>(() => {
     const persisted = loadPersisted(patientId)
 
     return persisted ?? buildInitialState(initialData)
@@ -267,7 +296,7 @@ export const useOdontogramState = (
   )
 
   const clearAll = useCallback(() => {
-    const blank: OdontogramV2State = {}
+    const blank: OdontogramData = {}
 
     for (const fdi of ALL_TEETH) {
       blank[fdi] = blankTooth()

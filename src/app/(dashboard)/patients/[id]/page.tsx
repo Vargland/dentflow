@@ -10,12 +10,12 @@ import { getTranslation } from '@/lib/i18n/server'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import Odontogram from '@/components/odontogram/odontogram'
 import { ApiError } from '@/services/api-client'
 import { getEvolutions } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
 
 import EvolutionList from './_components/evolution-list'
-import Odontogram from './_components/odontogram-v2'
 
 /**
  * Calculates age in years from a date-of-birth string.

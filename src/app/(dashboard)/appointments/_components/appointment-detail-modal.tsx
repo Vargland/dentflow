@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import Odontogram from '@/app/(dashboard)/patients/[id]/_components/odontogram-v2'
+import Odontogram from '@/components/odontogram/odontogram'
 import {
   deleteAppointment,
   sendAppointmentInvite,
