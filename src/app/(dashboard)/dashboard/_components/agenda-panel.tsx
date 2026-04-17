@@ -145,14 +145,15 @@ const AgendaPanel = ({
                 onClick={() => onSelect(appt)}
                 className={cn(
                   'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border',
-                  // Active — soft blue, not full saturated
+                  // Active — strong blue, dominant
                   isActive &&
                     'border-blue-300 bg-blue-50 dark:bg-blue-950/60 dark:border-blue-700 shadow-sm',
-                  // Completed — soft green
+                  // Completed — very muted, almost gray
                   isCompleted &&
-                    'border-green-200 bg-green-50 dark:bg-green-950/40 dark:border-green-800',
-                  // Cancelled — soft red
-                  isCancelled && 'border-red-200 bg-red-50 dark:bg-red-950/40 dark:border-red-800',
+                    'border-gray-200 bg-gray-50 dark:bg-gray-800/40 dark:border-gray-700/60',
+                  // Cancelled — barely-there red, not dominant
+                  isCancelled &&
+                    'border-red-100 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50',
                   // Not selected, not done
                   !isSelected &&
                     !isDone &&
@@ -168,9 +169,9 @@ const AgendaPanel = ({
                         isActive
                           ? 'text-blue-600 dark:text-blue-400'
                           : isCompleted
-                            ? 'text-green-600 dark:text-green-400'
+                            ? 'text-gray-400 dark:text-gray-500'
                             : isCancelled
-                              ? 'text-red-400 dark:text-red-400'
+                              ? 'text-red-300 dark:text-red-800'
                               : 'text-gray-400 dark:text-gray-500'
                       )}
                     >
@@ -184,9 +185,9 @@ const AgendaPanel = ({
                         isActive
                           ? 'text-blue-900 dark:text-blue-100'
                           : isCompleted
-                            ? 'text-green-900 dark:text-green-100'
+                            ? 'text-gray-400 dark:text-gray-500'
                             : isCancelled
-                              ? 'text-red-700 dark:text-red-300 line-through'
+                              ? 'text-gray-400 dark:text-gray-600 line-through'
                               : 'text-gray-800 dark:text-gray-200'
                       )}
                     >
@@ -217,12 +218,12 @@ const AgendaPanel = ({
                       </span>
                     )}
                     {isCompleted && (
-                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">
                         ✓
                       </span>
                     )}
                     {isCancelled && (
-                      <span className="text-[10px] font-medium text-red-400 dark:text-red-400 bg-red-100 dark:bg-red-900 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-medium text-red-300 dark:text-red-700 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">
                         ✕
                       </span>
                     )}
