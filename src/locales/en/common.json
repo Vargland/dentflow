@@ -253,7 +253,14 @@
     "activePatient": "Active patient",
     "viewFullRecord": "Full record",
     "assignPatient": "Assign patient",
-    "assignExistingPatient": "Search existing patient"
+    "assignExistingPatient": "Search existing patient",
+    "cancelledByPatient": "Cancelled by patient",
+    "cancelledSuccess": "Appointment cancelled",
+    "cancelReasonPrompt": "Select or write the reason for cancellation",
+    "cancelReasonAbsent": "Absent / no-show",
+    "cancelReasonCustom": "Other reason",
+    "cancelReasonPlaceholder": "e.g. called to reschedule...",
+    "confirmCancel": "Confirm cancellation"
   },
   "settings": {
     "title": "Settings",

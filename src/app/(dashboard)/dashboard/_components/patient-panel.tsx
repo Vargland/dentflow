@@ -156,6 +156,10 @@ const PatientPanel = ({
 
   const [showAllNotes, setShowAllNotes] = useState(false)
 
+  const [showCancelModal, setShowCancelModal] = useState(false)
+
+  const [cancelReason, setCancelReason] = useState('')
+
   const [isUpdating, startUpdate] = useTransition()
 
   // Load patient + evolutions whenever the selected appointment changes
@@ -208,11 +212,13 @@ const PatientPanel = ({
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleStatusUpdate = (newStatus: 'completed' | 'cancelled') => {
+  const handleStatusUpdate = (newStatus: 'completed' | 'cancelled', reason?: string) => {
     if (!appointment) return
 
     startUpdate(async () => {
       try {
+        const notes = reason ? reason.trim() || null : (appointment.notes ?? null)
+
         await updateAppointment(token, appointment.id, {
           patient_id: appointment.patient_id,
           title: appointment.title,
@@ -220,7 +226,7 @@ const PatientPanel = ({
           end_time: appointment.end_time,
           duration_minutes: appointment.duration_minutes,
           status: newStatus,
-          notes: appointment.notes ?? null,
+          notes,
           allow_overlap: true,
         })
 
@@ -229,12 +235,20 @@ const PatientPanel = ({
         toast.success(
           newStatus === 'completed'
             ? t('appointmentDetail.markedCompleted')
-            : t('appointments.form.statuses.cancelled')
+            : t('dashboard.cancelledSuccess')
         )
       } catch {
         toast.error(t('appointmentDetail.updateError'))
       }
     })
+  }
+
+  const handleConfirmCancel = () => {
+    handleStatusUpdate('cancelled', cancelReason || t('dashboard.cancelReasonAbsent'))
+
+    setShowCancelModal(false)
+
+    setCancelReason('')
   }
 
   // ── Empty states ─────────────────────────────────────────────────────────────
@@ -530,12 +544,12 @@ const PatientPanel = ({
 
             <Button
               variant="outline"
-              className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-50"
+              className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50"
               type="button"
               disabled={isUpdating}
-              onClick={() => handleStatusUpdate('cancelled')}
+              onClick={() => setShowCancelModal(true)}
             >
-              {t('dashboard.noShow')}
+              {t('dashboard.cancelledByPatient')}
             </Button>
           </div>
         )}
@@ -544,18 +558,89 @@ const PatientPanel = ({
         {isAlreadyDone && (
           <div
             className={cn(
-              'text-center text-sm font-medium py-2 rounded-lg',
+              'text-sm font-medium py-2 px-3 rounded-lg text-center',
               appointment.status === 'completed'
                 ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                : 'bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300'
             )}
           >
             {appointment.status === 'completed'
               ? t('appointments.form.statuses.completed')
-              : t('dashboard.noShow')}
+              : appointment.notes
+                ? `${t('dashboard.cancelledByPatient')}: ${appointment.notes}`
+                : t('dashboard.cancelledByPatient')}
           </div>
         )}
       </div>
+
+      {/* ── Cancel appointment modal ─────────────────────────────────────────── */}
+      <Dialog open={showCancelModal} onOpenChange={open => setShowCancelModal(open)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('dashboard.cancelledByPatient')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('dashboard.cancelReasonPrompt')}
+            </p>
+
+            {/* Quick options */}
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelReason(t('dashboard.cancelReasonAbsent'))}
+                className={cn(
+                  'text-left text-sm px-3 py-2 rounded-lg border transition-colors',
+                  cancelReason === t('dashboard.cancelReasonAbsent')
+                    ? 'border-orange-400 bg-orange-50 text-orange-700'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+                )}
+              >
+                {t('dashboard.cancelReasonAbsent')}
+              </button>
+            </div>
+
+            {/* Free text */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {t('dashboard.cancelReasonCustom')}
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder={t('dashboard.cancelReasonPlaceholder')}
+                rows={2}
+                className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCancelModal(false)
+
+                setCancelReason('')
+              }}
+            >
+              {t('appointments.form.cancel')}
+            </Button>
+            <Button
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={handleConfirmCancel}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                t('dashboard.confirmCancel')
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── All notes modal ───────────────────────────────────────────────────── */}
       <Dialog open={showAllNotes} onOpenChange={open => setShowAllNotes(open)}>

@@ -253,7 +253,14 @@
     "activePatient": "Paciente activo",
     "viewFullRecord": "Ver ficha completa",
     "assignPatient": "Asignar paciente",
-    "assignExistingPatient": "Buscar paciente existente"
+    "assignExistingPatient": "Buscar paciente existente",
+    "cancelledByPatient": "Cancelado por el paciente",
+    "cancelledSuccess": "Turno cancelado",
+    "cancelReasonPrompt": "Selecciona o escribe el motivo de la cancelacion",
+    "cancelReasonAbsent": "Ausente / no se presento",
+    "cancelReasonCustom": "Otro motivo",
+    "cancelReasonPlaceholder": "Ej: llamo para avisar, reagendo...",
+    "confirmCancel": "Confirmar cancelacion"
   },
   "settings": {
     "title": "Configuracion",
