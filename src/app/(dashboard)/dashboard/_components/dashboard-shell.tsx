@@ -72,9 +72,16 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  /** Update the local status of an appointment after a mutation. */
-  const handleAppointmentUpdated = (id: string, status: string) => {
+  /**
+   * Update the local status of an appointment after a mutation.
+   * If a nextId is provided, automatically advance to that appointment.
+   */
+  const handleAppointmentUpdated = (id: string, status: string, nextId?: string | null) => {
     setAppointments(prev => prev.map(a => (a.id === id ? { ...a, status } : a)))
+
+    if (nextId) {
+      setSelectedId(nextId)
+    }
   }
 
   /** Open the appointment form pre-filled with the given patient. */
@@ -215,6 +222,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
         <div className="flex-1 min-w-0">
           <PatientPanel
             appointment={selectedAppointment}
+            appointments={appointments}
             onAppointmentUpdated={handleAppointmentUpdated}
             onScheduleAppointment={handleScheduleAppointment}
             onOpenOdontogram={handleOpenOdontogram}

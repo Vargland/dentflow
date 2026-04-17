@@ -16,7 +16,6 @@ import {
   Loader2,
   Mail,
   Phone,
-  Plus,
   ScanLine,
   Search,
   Stethoscope,
@@ -97,8 +96,10 @@ const PatientAvatar = ({ nombre, apellido }: { nombre: string; apellido: string 
 export interface PatientPanelProps {
   /** The selected appointment. */
   appointment: Appointment | null
+  /** All appointments for the day — used to compute the next patient. */
+  appointments: Appointment[]
   /** Called after appointment status mutation so the parent can refresh. */
-  onAppointmentUpdated: (id: string, status: string) => void
+  onAppointmentUpdated: (id: string, status: string, nextId?: string | null) => void
   /** Called when the user wants to schedule a new appointment for this patient. */
   onScheduleAppointment: (patientId: string, patientName: string) => void
   /** Called when the user clicks "Abrir Odontograma". */
@@ -116,6 +117,7 @@ export interface PatientPanelProps {
  */
 const PatientPanel = ({
   appointment,
+  appointments,
   onAppointmentUpdated,
   onScheduleAppointment,
   onOpenOdontogram,
@@ -148,8 +150,6 @@ const PatientPanel = ({
   const [evolutionTeeth, setEvolutionTeeth] = useState('')
 
   const [isUpdating, startUpdate] = useTransition()
-
-  const [isSavingEvolution, startSaveEvolution] = useTransition()
 
   const [togglingPaidId, setTogglingPaidId] = useState<string | null>(null)
 
@@ -208,7 +208,73 @@ const PatientPanel = ({
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleStatusUpdate = (newStatus: 'completed' | 'cancelled', reason?: string) => {
+  /**
+   * Computes the next scheduled appointment after the current one.
+   * Returns null if none exists.
+   */
+  const getNextAppointment = (): Appointment | null => {
+    if (!appointment) return null
+
+    const currentIndex = appointments.findIndex(a => a.id === appointment.id)
+
+    const remaining = appointments.slice(currentIndex + 1)
+
+    return remaining.find(a => a.status === 'scheduled') ?? null
+  }
+
+  /**
+   * Single primary action: optionally saves evolution, marks appointment as
+   * completed, then auto-advances to the next scheduled patient.
+   */
+  const handleFinishAppointment = () => {
+    if (!appointment) return
+
+    startUpdate(async () => {
+      try {
+        // 1. Save evolution if textarea has content
+        if (patient && evolutionText.trim()) {
+          const teeth = evolutionTeeth
+            .split(',')
+            .map(s => parseInt(s.trim(), 10))
+            .filter(n => !isNaN(n) && n > 0)
+
+          const ev = await createEvolution(token, patient.id, {
+            descripcion: evolutionText.trim(),
+            dientes: teeth.length > 0 ? teeth : undefined,
+          })
+
+          setEvolutions(prev => [ev, ...prev])
+
+          setEvolutionText('')
+
+          setEvolutionTeeth('')
+        }
+
+        // 2. Mark appointment as completed
+        await updateAppointment(token, appointment.id, {
+          patient_id: appointment.patient_id,
+          title: appointment.title,
+          start_time: appointment.start_time,
+          end_time: appointment.end_time,
+          duration_minutes: appointment.duration_minutes,
+          status: 'completed',
+          notes: appointment.notes ?? null,
+          allow_overlap: true,
+        })
+
+        // 3. Advance to next patient
+        const next = getNextAppointment()
+
+        onAppointmentUpdated(appointment.id, 'completed', next?.id ?? null)
+
+        toast.success(t('appointmentDetail.markedCompleted'))
+      } catch {
+        toast.error(t('appointmentDetail.updateError'))
+      }
+    })
+  }
+
+  const handleCancelAppointment = (reason?: string) => {
     if (!appointment) return
 
     startUpdate(async () => {
@@ -221,18 +287,16 @@ const PatientPanel = ({
           start_time: appointment.start_time,
           end_time: appointment.end_time,
           duration_minutes: appointment.duration_minutes,
-          status: newStatus,
+          status: 'cancelled',
           notes,
           allow_overlap: true,
         })
 
-        onAppointmentUpdated(appointment.id, newStatus)
+        const next = getNextAppointment()
 
-        toast.success(
-          newStatus === 'completed'
-            ? t('appointmentDetail.markedCompleted')
-            : t('dashboard.cancelledSuccess')
-        )
+        onAppointmentUpdated(appointment.id, 'cancelled', next?.id ?? null)
+
+        toast.success(t('dashboard.cancelledSuccess'))
       } catch {
         toast.error(t('appointmentDetail.updateError'))
       }
@@ -240,41 +304,11 @@ const PatientPanel = ({
   }
 
   const handleConfirmCancel = () => {
-    handleStatusUpdate('cancelled', cancelReason || t('dashboard.cancelReasonAbsent'))
+    handleCancelAppointment(cancelReason || t('dashboard.cancelReasonAbsent'))
 
     setShowCancelModal(false)
 
     setCancelReason('')
-  }
-
-  const handleSaveEvolution = () => {
-    if (!patient || !evolutionText.trim()) return
-
-    startSaveEvolution(async () => {
-      try {
-        const teeth = evolutionTeeth
-          .split(',')
-          .map(s => parseInt(s.trim(), 10))
-          .filter(n => !isNaN(n) && n > 0)
-
-        const ev = await createEvolution(token, patient.id, {
-          descripcion: evolutionText.trim(),
-          dientes: teeth.length > 0 ? teeth : undefined,
-        })
-
-        setEvolutions(prev => [ev, ...prev])
-
-        setEvolutionText('')
-
-        setEvolutionTeeth('')
-
-        toast.success(t('records.saved'))
-
-        textareaRef.current?.focus()
-      } catch {
-        toast.error(t('appointmentDetail.evolutionError'))
-      }
-    })
   }
 
   const handleTogglePaid = async (ev: Evolution) => {
@@ -348,7 +382,7 @@ const PatientPanel = ({
             type="button"
             className="w-full gap-2 border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
             disabled={isUpdating}
-            onClick={() => handleStatusUpdate('cancelled')}
+            onClick={() => handleCancelAppointment()}
           >
             {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
             {t('appointments.form.statuses.cancelled')}
@@ -475,11 +509,8 @@ const PatientPanel = ({
             ref={textareaRef}
             value={evolutionText}
             onChange={e => setEvolutionText(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSaveEvolution()
-            }}
             placeholder={t('records.descriptionPlaceholder')}
-            rows={5}
+            rows={8}
             disabled={isAlreadyDone}
             className={cn(
               'w-full rounded-xl border px-4 py-3 text-sm leading-relaxed resize-none transition-all',
@@ -491,6 +522,7 @@ const PatientPanel = ({
             )}
           />
 
+          {/* Teeth input — secondary, minimal */}
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -499,24 +531,11 @@ const PatientPanel = ({
               placeholder={t('records.teethPlaceholder')}
               title={t('records.teethHint')}
               disabled={isAlreadyDone}
-              className="w-32 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+              className="w-32 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
             />
-            <span className="text-xs text-gray-400 dark:text-gray-600 flex-1">
+            <span className="text-xs text-gray-400 dark:text-gray-600">
               {t('records.teethHint')}
             </span>
-            <Button
-              type="button"
-              disabled={!evolutionText.trim() || isSavingEvolution || isAlreadyDone}
-              onClick={handleSaveEvolution}
-              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-40"
-            >
-              {isSavingEvolution ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              {t('records.save')}
-            </Button>
           </div>
         </div>
 
@@ -610,16 +629,18 @@ const PatientPanel = ({
 
       {/* ── E. FOOTER ACTIONS ─────────────────────────────────────────────────── */}
       <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-        {/* Primary CTA */}
+        {/* Primary CTA — single action, saves evolution + completes + advances */}
         {!isAlreadyDone && (
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 text-base shadow-sm"
             type="button"
             disabled={isUpdating}
-            onClick={() => handleStatusUpdate('completed')}
+            onClick={handleFinishAppointment}
           >
             {isUpdating ? (
               <Loader2 className="h-5 w-5 animate-spin" />
+            ) : evolutionText.trim() ? (
+              t('dashboard.finishAndSave')
             ) : (
               t('dashboard.finishAppointment')
             )}

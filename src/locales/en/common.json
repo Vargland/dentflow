@@ -264,7 +264,8 @@
     "cancelReasonPlaceholder": "e.g. called to reschedule...",
     "confirmCancel": "Confirm cancellation",
     "inProgress": "In progress",
-    "newEvolution": "New evolution"
+    "newEvolution": "New evolution",
+    "finishAndSave": "Finish and save evolution"
   },
   "settings": {
     "title": "Settings",

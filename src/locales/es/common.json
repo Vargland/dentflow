@@ -264,7 +264,8 @@
     "cancelReasonPlaceholder": "Ej: llamo para avisar, reagendo...",
     "confirmCancel": "Confirmar cancelacion",
     "inProgress": "En curso",
-    "newEvolution": "Nueva evolucion"
+    "newEvolution": "Nueva evolucion",
+    "finishAndSave": "Finalizar y guardar evolucion"
   },
   "settings": {
     "title": "Configuracion",
