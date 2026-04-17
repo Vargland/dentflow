@@ -426,7 +426,7 @@ const PatientPanel = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight truncate">
+            <h2 className="font-heading text-2xl text-gray-900 dark:text-gray-100 leading-tight truncate">
               {patient.apellido}, {patient.nombre}
             </h2>
             <Link
