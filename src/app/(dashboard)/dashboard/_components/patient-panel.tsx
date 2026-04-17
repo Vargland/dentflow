@@ -325,11 +325,7 @@ const PatientPanel = ({
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
-  const visitCount = evolutions.length
-
   const recentEvolutions = evolutions.slice(0, 2)
-
-  const patientSinceDate = formatDate(patient.createdAt, i18n.language)
 
   const hasAlergias = Boolean(patient.alergias?.trim())
 
@@ -396,34 +392,7 @@ const PatientPanel = ({
           </div>
         )}
 
-        {/* 3. Quick stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
-            <Stethoscope className="h-4 w-4 text-blue-500 shrink-0" />
-            <div>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                {t('dashboard.visitsLabel')}
-              </p>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                {t('dashboard.visitsCount', { count: visitCount })}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
-            <Calendar className="h-4 w-4 text-blue-500 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                {t('dashboard.patientSince')}
-              </p>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                {patientSinceDate}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Last 2 treatments + "see all" link */}
+        {/* 3. Last 2 treatments + "see all" link */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
