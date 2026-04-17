@@ -45,3 +45,6 @@ next-env.d.ts
 
 /src/generated/prisma
 /prisma
+
+# local scripts (seed, utils) — not for repo
+/scripts/
