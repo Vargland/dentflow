@@ -163,6 +163,8 @@ const PatientPanel = ({
 
   const [evolutionText, setEvolutionText] = useState('')
 
+  const [evolutionTeeth, setEvolutionTeeth] = useState('')
+
   const [isUpdating, startUpdate] = useTransition()
 
   const [isSavingEvolution, startSaveEvolution] = useTransition()
@@ -261,11 +263,21 @@ const PatientPanel = ({
 
     startSaveEvolution(async () => {
       try {
-        const ev = await createEvolution(token, patient.id, { descripcion: evolutionText.trim() })
+        const teeth = evolutionTeeth
+          .split(',')
+          .map(s => parseInt(s.trim(), 10))
+          .filter(n => !isNaN(n) && n > 0)
+
+        const ev = await createEvolution(token, patient.id, {
+          descripcion: evolutionText.trim(),
+          dientes: teeth.length > 0 ? teeth : undefined,
+        })
 
         setEvolutions(prev => [ev, ...prev])
 
         setEvolutionText('')
+
+        setEvolutionTeeth('')
 
         toast.success(t('records.saved'))
       } catch {
@@ -505,7 +517,15 @@ const PatientPanel = ({
           rows={2}
           className="w-full rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 resize-none transition-colors"
         />
-        <div className="flex justify-end">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={evolutionTeeth}
+            onChange={e => setEvolutionTeeth(e.target.value)}
+            placeholder={t('records.teethPlaceholder')}
+            className="w-36 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 transition-colors"
+          />
+          <span className="text-xs text-gray-400 flex-1">{t('records.teethHint')}</span>
           <Button
             type="button"
             disabled={!evolutionText.trim() || isSavingEvolution}
