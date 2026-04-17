@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import {
   AlertCircle,
@@ -15,6 +16,7 @@ import {
   ScanLine,
   Stethoscope,
   UserPlus,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -115,8 +117,6 @@ export interface PatientPanelProps {
   onScheduleAppointment: (patientId: string, patientName: string) => void
   /** Called when the user clicks "Abrir Odontograma". */
   onOpenOdontogram: (patientId: string) => void
-  /** Called when the user wants to edit the current appointment (e.g. assign a patient). */
-  onEditAppointment: (appointment: Appointment) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -135,11 +135,12 @@ const PatientPanel = ({
   onAppointmentUpdated,
   onScheduleAppointment,
   onOpenOdontogram,
-  onEditAppointment,
 }: PatientPanelProps) => {
   const { t, i18n } = useTranslation()
 
   const { data: session } = useSession()
+
+  const router = useRouter()
 
   const token = (session?.accessToken as string) ?? ''
 
@@ -258,15 +259,26 @@ const PatientPanel = ({
           </p>
           <p className="text-sm text-gray-400 dark:text-gray-500">{t('dashboard.noPatient')}</p>
         </div>
-        <Button
-          variant="outline"
-          className="gap-2"
-          type="button"
-          onClick={() => onEditAppointment(appointment)}
-        >
-          <UserPlus className="h-4 w-4" />
-          {t('dashboard.assignPatient')}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => router.push('/patients/new')}
+          >
+            <UserPlus className="h-4 w-4" />
+            {t('patients.newPatient')}
+          </Button>
+          <Button
+            variant="outline"
+            type="button"
+            className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
+            disabled={isUpdating}
+            onClick={() => handleStatusUpdate('cancelled')}
+          >
+            {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+            {t('appointments.form.statuses.cancelled')}
+          </Button>
+        </div>
       </div>
     )
   }
