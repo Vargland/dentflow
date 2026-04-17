@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { LangSwitcher } from '@/components/lang-switcher'
+import { Logo } from '@/components/logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 interface NavbarProps {
@@ -57,9 +58,8 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900 dark:border-gray-800 shadow-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-blue-600 text-xl">
-          <span className="text-2xl">🦷</span>
-          <span>DentFlow</span>
+        <Link href="/dashboard" className="flex items-center">
+          <Logo />
         </Link>
 
         {/* Nav desktop */}
@@ -116,9 +116,8 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex flex-col h-full">
-              <div className="flex items-center gap-2 p-4 border-b font-bold text-blue-600 text-xl">
-                <span className="text-2xl">🦷</span>
-                <span>DentFlow</span>
+              <div className="flex items-center p-4 border-b">
+                <Logo />
               </div>
               <nav className="flex flex-col gap-1 p-3 flex-1">
                 {navLinks.map(({ href, label, icon: Icon }) => (
