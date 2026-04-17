@@ -150,7 +150,7 @@
     "description": "Description",
     "descriptionPlaceholder": "Description of the treatment performed...",
     "teethTreated": "Teeth treated",
-    "teethHint": "Comma-separated numbers",
+    "teethHint": "Tooth number",
     "teethPlaceholder": "e.g. 11,12,21",
     "amount": "Amount",
     "save": "Save record",
