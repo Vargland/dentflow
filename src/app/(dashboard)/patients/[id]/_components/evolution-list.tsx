@@ -48,8 +48,7 @@ const EvolutionCard = ({ ev }: { ev: Evolution }) => {
       )}
       {ev.importe !== null && (
         <p className="text-xs text-gray-500">
-          {t('records.amount')}:{' '}
-          <span className="font-medium">${ev.importe.toLocaleString()}</span>
+          {t('records.amount')}: <span className="font-medium">${ev.importe.toLocaleString()}</span>
           {' — '}
           <span className={ev.pagado ? 'text-green-600' : 'text-orange-500'}>
             {ev.pagado ? t('records.paid') : t('records.pending')}
@@ -182,7 +181,7 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
       {/* Records list */}
       {evolutions.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-12 text-gray-400 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
           <p className="font-medium">{t('records.empty')}</p>
           <p className="text-sm mt-1">{t('records.emptyHint')}</p>
         </div>
@@ -191,7 +190,7 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
           {evolutions.map(ev => (
             <div
               key={ev.id}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               <button
                 type="button"

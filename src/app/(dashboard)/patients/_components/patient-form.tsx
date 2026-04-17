@@ -8,7 +8,13 @@ import { useTranslation } from '@/lib/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -26,9 +32,7 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
 
   const [sexo, setSexo] = useState(patient?.sexo ?? '')
 
-  const fechaStr = patient?.fechaNacimiento
-    ? patient.fechaNacimiento.split('T')[0]
-    : ''
+  const fechaStr = patient?.fechaNacimiento ? patient.fechaNacimiento.split('T')[0] : ''
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -58,8 +62,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Personal information */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">{t('patientForm.sections.personal')}</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          {t('patientForm.sections.personal')}
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="apellido">{t('patientForm.fields.lastName')} *</Label>
@@ -106,12 +112,7 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">{t('patientForm.fields.email')}</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              defaultValue={patient?.email ?? ''}
-            />
+            <Input id="email" name="email" type="email" defaultValue={patient?.email ?? ''} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="direccion">{t('patientForm.fields.address')}</Label>
@@ -121,8 +122,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
       </div>
 
       {/* Insurance */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">{t('patientForm.sections.insurance')}</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          {t('patientForm.sections.insurance')}
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="obraSocial">{t('patientForm.fields.insuranceProvider')}</Label>
@@ -136,8 +139,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
       </div>
 
       {/* Medical history */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">{t('patientForm.sections.medicalHistory')}</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          {t('patientForm.sections.medicalHistory')}
+        </h2>
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="alergias">{t('patientForm.fields.allergies')}</Label>
@@ -172,8 +177,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
       </div>
 
       {/* Notes */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">{t('patientForm.sections.notes')}</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          {t('patientForm.sections.notes')}
+        </h2>
         <Textarea id="notas" name="notas" rows={3} defaultValue={patient?.notas ?? ''} />
       </div>
 

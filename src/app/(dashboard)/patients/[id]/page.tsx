@@ -151,7 +151,7 @@ export default async function PatientPage({ params }: PatientPageParams) {
         </TabsContent>
 
         <TabsContent value="historia">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-5">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-5">
             {[
               {
                 label: t('patientDetail.medicalHistory.allergies'),

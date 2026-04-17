@@ -224,7 +224,7 @@ const TimeGrid = ({
           >
             {/* Day header */}
             <div
-              className={`h-10 border-b border-gray-200 flex items-center justify-center sticky top-0 bg-white z-10 ${
+              className={`h-10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center sticky top-0 bg-white dark:bg-gray-900 z-10 ${
                 isToday ? 'text-blue-600 font-semibold' : 'text-gray-600'
               }`}
             >
@@ -439,13 +439,15 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         {/* View toggle */}
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           {(['day', 'week', 'month'] as View[]).map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === v ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                view === v
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               {t(`appointments.views.${v}`)}
@@ -487,7 +489,7 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         {loading && (
           <div className="h-1 bg-blue-100">
             <div className="h-1 bg-blue-500 animate-pulse w-1/2 mx-auto rounded-full" />

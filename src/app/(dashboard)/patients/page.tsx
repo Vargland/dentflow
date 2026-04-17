@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Search,UserPlus, Users } from 'lucide-react'
+import { Search, UserPlus, Users } from 'lucide-react'
 
 import type { PatientListSearchParams } from '@/typing/pages/patients.types'
 import { auth } from '@/lib/auth'
@@ -28,8 +28,10 @@ export default async function PatientsPage({ searchParams }: PatientListSearchPa
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('patients.title')}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t('patients.title')}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {t('patients.count', { count: patients.length })}
           </p>
         </div>
@@ -60,19 +62,19 @@ export default async function PatientsPage({ searchParams }: PatientListSearchPa
           {!q && <p className="text-sm mt-1">{t('patients.emptyHint')}</p>}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <ul className="divide-y divide-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {patients.map(p => (
               <li key={p.id}>
                 <Link
                   href={`/patients/${p.id}`}
-                  className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900 truncate">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {p.apellido}, {p.nombre}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500 dark:text-gray-400">
                       {p.dni && <span>ID {p.dni}</span>}
                       {p.telefono && <span>{p.telefono}</span>}
                       {p.obraSocial && (
