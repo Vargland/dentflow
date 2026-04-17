@@ -711,6 +711,7 @@ export const AppointmentDetailModal = ({
           duration_minutes: appointment.duration_minutes,
           status: 'completed',
           notes: appointment.notes ?? null,
+          allow_overlap: true,
         })
 
         toast.success(t('appointmentDetail.markedCompleted'))

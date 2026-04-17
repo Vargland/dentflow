@@ -221,6 +221,7 @@ const PatientPanel = ({
           duration_minutes: appointment.duration_minutes,
           status: newStatus,
           notes: appointment.notes ?? null,
+          allow_overlap: true,
         })
 
         onAppointmentUpdated(appointment.id, newStatus)
