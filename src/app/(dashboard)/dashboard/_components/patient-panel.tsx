@@ -141,7 +141,7 @@ const PatientPanel = ({
 
   const [cancelReason, setCancelReason] = useState('')
 
-  const [showHistory, setShowHistory] = useState(false)
+  const [showHistory, setShowHistory] = useState(true)
 
   const [evolutionText, setEvolutionText] = useState('')
 
@@ -158,8 +158,6 @@ const PatientPanel = ({
     const patientId = appointment?.patient_id
 
     let cancelled = false
-
-    setShowHistory(false)
 
     setEvolutionText('')
 
