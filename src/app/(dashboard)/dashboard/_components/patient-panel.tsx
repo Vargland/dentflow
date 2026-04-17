@@ -505,19 +505,21 @@ const PatientPanel = ({
           rows={2}
           className="w-full rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 resize-none transition-colors"
         />
-        <button
-          type="button"
-          disabled={!evolutionText.trim() || isSavingEvolution}
-          onClick={handleSaveEvolution}
-          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 disabled:opacity-40 transition-colors"
-        >
-          {isSavingEvolution ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-          {t('records.save')}
-        </button>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            disabled={!evolutionText.trim() || isSavingEvolution}
+            onClick={handleSaveEvolution}
+            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isSavingEvolution ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            {t('records.save')}
+          </Button>
+        </div>
       </div>
 
       {/* ── Actions footer ────────────────────────────────────────────────────── */}
