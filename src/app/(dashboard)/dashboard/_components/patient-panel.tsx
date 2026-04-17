@@ -161,8 +161,6 @@ const PatientPanel = ({
 
   const [cancelReason, setCancelReason] = useState('')
 
-  const [showAddEvolution, setShowAddEvolution] = useState(false)
-
   const [evolutionText, setEvolutionText] = useState('')
 
   const [isUpdating, startUpdate] = useTransition()
@@ -268,8 +266,6 @@ const PatientPanel = ({
         setEvolutions(prev => [ev, ...prev])
 
         setEvolutionText('')
-
-        setShowAddEvolution(false)
 
         toast.success(t('records.saved'))
       } catch {
@@ -443,72 +439,22 @@ const PatientPanel = ({
           </div>
         )}
 
-        {/* 3. Evolutions — list + inline add form */}
+        {/* 3. Evolutions list */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {t('dashboard.lastTreatments')}
             </p>
-            <div className="flex items-center gap-3">
-              {evolutions.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllNotes(true)}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {t('dashboard.allNotes')}
-                </button>
-              )}
+            {evolutions.length > 2 && (
               <button
                 type="button"
-                onClick={() => setShowAddEvolution(v => !v)}
-                className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => setShowAllNotes(true)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
               >
-                <Plus className="h-3.5 w-3.5" />
-                {t('records.newRecord')}
+                {t('dashboard.allNotes')}
               </button>
-            </div>
+            )}
           </div>
-
-          {/* Inline add-evolution form */}
-          {showAddEvolution && (
-            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 space-y-3">
-              <textarea
-                value={evolutionText}
-                onChange={e => setEvolutionText(e.target.value)}
-                placeholder={t('records.descriptionPlaceholder')}
-                rows={3}
-                autoFocus
-                className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              />
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddEvolution(false)
-
-                    setEvolutionText('')
-                  }}
-                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1"
-                >
-                  {t('records.cancel')}
-                </button>
-                <button
-                  type="button"
-                  disabled={!evolutionText.trim() || isSavingEvolution}
-                  onClick={handleSaveEvolution}
-                  className="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md transition-colors"
-                >
-                  {isSavingEvolution ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" />
-                  )}
-                  {t('records.save')}
-                </button>
-              </div>
-            </div>
-          )}
 
           {recentEvolutions.length > 0 ? (
             <div className="space-y-2">
@@ -544,6 +490,35 @@ const PatientPanel = ({
               {t('dashboard.noTreatments')}
             </p>
           )}
+        </div>
+      </div>
+
+      {/* ── Evolution composer — always visible above the action footer ────────── */}
+      <div className="px-5 pt-3 pb-2 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex gap-2 items-end">
+          <textarea
+            value={evolutionText}
+            onChange={e => setEvolutionText(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSaveEvolution()
+            }}
+            placeholder={t('records.descriptionPlaceholder')}
+            rows={2}
+            className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 resize-none transition-colors"
+          />
+          <button
+            type="button"
+            disabled={!evolutionText.trim() || isSavingEvolution}
+            onClick={handleSaveEvolution}
+            className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white transition-colors shrink-0"
+            aria-label={t('records.save')}
+          >
+            {isSavingEvolution ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+          </button>
         </div>
       </div>
 
