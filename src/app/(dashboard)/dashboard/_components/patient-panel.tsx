@@ -494,32 +494,30 @@ const PatientPanel = ({
       </div>
 
       {/* ── Evolution composer — always visible above the action footer ────────── */}
-      <div className="px-5 pt-3 pb-2 border-t border-gray-100 dark:border-gray-700">
-        <div className="flex gap-2 items-end">
-          <textarea
-            value={evolutionText}
-            onChange={e => setEvolutionText(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSaveEvolution()
-            }}
-            placeholder={t('records.descriptionPlaceholder')}
-            rows={2}
-            className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 resize-none transition-colors"
-          />
-          <button
-            type="button"
-            disabled={!evolutionText.trim() || isSavingEvolution}
-            onClick={handleSaveEvolution}
-            className="h-9 w-9 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white transition-colors shrink-0"
-            aria-label={t('records.save')}
-          >
-            {isSavingEvolution ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </button>
-        </div>
+      <div className="px-5 pt-3 pb-2 border-t border-gray-100 dark:border-gray-700 space-y-1.5">
+        <textarea
+          value={evolutionText}
+          onChange={e => setEvolutionText(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSaveEvolution()
+          }}
+          placeholder={t('records.descriptionPlaceholder')}
+          rows={2}
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 resize-none transition-colors"
+        />
+        <button
+          type="button"
+          disabled={!evolutionText.trim() || isSavingEvolution}
+          onClick={handleSaveEvolution}
+          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 disabled:opacity-40 transition-colors"
+        >
+          {isSavingEvolution ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Plus className="h-3.5 w-3.5" />
+          )}
+          {t('records.save')}
+        </button>
       </div>
 
       {/* ── Actions footer ────────────────────────────────────────────────────── */}
