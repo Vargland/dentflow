@@ -7,6 +7,7 @@ import { getLang } from '@/lib/i18n/get-lang'
 import { Toaster } from '@/components/ui/sonner'
 import { I18nProvider } from '@/components/i18n-provider'
 import { SessionProvider } from '@/components/session-provider'
+import { ThemeProvider } from '@/components/theme-provider'
 
 const geist = Geist({
   variable: '--font-geist-sans',
@@ -26,12 +27,19 @@ export default async function RootLayout({
   const lang = await getLang()
 
   return (
-    <html lang={lang} className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full bg-gray-50 text-gray-900">
-        <SessionProvider>
-          <I18nProvider lang={lang}>{children}</I18nProvider>
-        </SessionProvider>
-        <Toaster richColors position="top-right" />
+    <html lang={lang} className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            <I18nProvider lang={lang}>{children}</I18nProvider>
+          </SessionProvider>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   )

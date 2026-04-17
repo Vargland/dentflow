@@ -262,7 +262,9 @@
     "cancelReasonAbsent": "Ausente / no se presento",
     "cancelReasonCustom": "Otro motivo",
     "cancelReasonPlaceholder": "Ej: llamo para avisar, reagendo...",
-    "confirmCancel": "Confirmar cancelacion"
+    "confirmCancel": "Confirmar cancelacion",
+    "inProgress": "En curso",
+    "newEvolution": "Nueva evolucion"
   },
   "settings": {
     "title": "Configuracion",

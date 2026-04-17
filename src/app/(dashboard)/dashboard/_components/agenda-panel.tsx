@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 
 import type { Appointment } from '@/typing/services/appointment.interface'
 import { useTranslation } from '@/lib/i18n/client'
@@ -22,31 +22,6 @@ const isSameDay = (a: Date, b: Date): boolean =>
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate()
-
-// ── Status config ─────────────────────────────────────────────────────────────
-
-interface StatusConfig {
-  dot: string
-  card: string
-}
-
-const STATUS_CONFIG: Record<string, StatusConfig> = {
-  scheduled: {
-    dot: 'bg-blue-500',
-    card: 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40',
-  },
-  completed: {
-    dot: 'bg-green-500',
-    card: 'border-gray-200 opacity-60 hover:opacity-80',
-  },
-  cancelled: {
-    dot: 'bg-gray-400',
-    card: 'border-gray-200 opacity-50 hover:opacity-70',
-  },
-}
-
-const getStatusConfig = (status: string): StatusConfig =>
-  STATUS_CONFIG[status] ?? STATUS_CONFIG.scheduled
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -74,15 +49,7 @@ export interface AgendaPanelProps {
 
 /**
  * Left panel of the dashboard: daily appointment agenda with date navigation.
- *
- * @param appointments     - Appointments for the viewed day.
- * @param selectedId       - ID of the currently active appointment.
- * @param viewDate         - The date being shown.
- * @param onSelect         - Callback when an appointment card is clicked.
- * @param onNewAppointment - Callback for the "+ Nuevo Turno" button.
- * @param onPrevDay        - Navigate to the previous day.
- * @param onNextDay        - Navigate to the next day.
- * @param onToday          - Jump to today.
+ * The active (selected) patient is visually dominant; others are muted.
  */
 const AgendaPanel = ({
   appointments,
@@ -111,26 +78,22 @@ const AgendaPanel = ({
   })
 
   return (
-    <aside className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700 space-y-2">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-          {t('dashboard.title')}
-        </h1>
-
+    <aside className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 overflow-hidden rounded-xl">
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
         {/* Date navigation */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 mb-2">
           <button
             type="button"
             onClick={onPrevDay}
             aria-label="Previous day"
-            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
 
           <div className="flex-1 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize leading-tight">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 capitalize">
               {dateLabel}
             </p>
           </div>
@@ -139,35 +102,37 @@ const AgendaPanel = ({
             type="button"
             onClick={onNextDay}
             aria-label="Next day"
-            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* "Today" pill — only shown when not on today */}
+        {/* "Hoy" pill */}
         {!isToday && (
           <button
             type="button"
             onClick={onToday}
-            className="w-full text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-md py-1 transition-colors"
+            className="w-full text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg py-1.5 transition-colors"
           >
             {t('appointments.today')}
           </button>
         )}
       </div>
 
-      {/* Appointment list */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+      {/* ── Appointment list ─────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5">
         {appointments.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-gray-400 dark:text-gray-500">
             {t('dashboard.noAppointmentsToday')}
           </div>
         ) : (
           appointments.map(appt => {
-            const cfg = getStatusConfig(appt.status)
-
             const isSelected = appt.id === selectedId
+
+            const isDone = appt.status === 'completed' || appt.status === 'cancelled'
+
+            const isActive = isSelected && appt.status === 'scheduled'
 
             return (
               <button
@@ -175,37 +140,76 @@ const AgendaPanel = ({
                 type="button"
                 onClick={() => onSelect(appt)}
                 className={cn(
-                  'w-full text-left rounded-xl border px-3 py-3 transition-all',
-                  cfg.card,
+                  'w-full text-left rounded-xl px-3 py-3 transition-all duration-150 border',
+                  // Active / selected patient — visually dominant
+                  isActive &&
+                    'border-blue-500 bg-blue-600 shadow-md shadow-blue-200 dark:shadow-blue-950',
+                  // Selected but done
                   isSelected &&
-                    'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-500 opacity-100 shadow-sm'
+                    isDone &&
+                    'border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800',
+                  // Not selected, not done
+                  !isSelected &&
+                    !isDone &&
+                    'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-blue-200 dark:hover:border-blue-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/30',
+                  // Not selected, done
+                  !isSelected &&
+                    isDone &&
+                    'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 opacity-45 hover:opacity-60'
                 )}
               >
-                <div className="flex items-start gap-2.5">
-                  {/* Status dot */}
-                  <span
-                    className={cn(
-                      'mt-1 h-2 w-2 rounded-full shrink-0',
-                      isSelected ? 'bg-blue-500' : cfg.dot
-                    )}
-                  />
-
-                  <div className="min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
                     {/* Time */}
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 tabular-nums">
+                    <p
+                      className={cn(
+                        'text-xs font-bold tabular-nums mb-0.5',
+                        isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'
+                      )}
+                    >
                       {toLocalTime(appt.start_time)}
                     </p>
 
-                    {/* Patient name or title */}
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate mt-0.5">
+                    {/* Patient name */}
+                    <p
+                      className={cn(
+                        'text-sm font-semibold truncate leading-snug',
+                        isActive ? 'text-white' : 'text-gray-800 dark:text-gray-200'
+                      )}
+                    >
                       {appt.patient_name ?? appt.title}
                     </p>
 
-                    {/* Title (procedure) if patient name differs */}
+                    {/* Procedure / title */}
                     {appt.patient_name && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      <p
+                        className={cn(
+                          'text-xs truncate mt-0.5',
+                          isActive ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'
+                        )}
+                      >
                         {appt.title}
                       </p>
+                    )}
+                  </div>
+
+                  {/* Status badge */}
+                  <div className="shrink-0 mt-0.5">
+                    {isActive && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-full">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                        {t('dashboard.inProgress')}
+                      </span>
+                    )}
+                    {appt.status === 'completed' && !isSelected && (
+                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 px-2 py-0.5 rounded-full">
+                        ✓
+                      </span>
+                    )}
+                    {appt.status === 'cancelled' && !isSelected && (
+                      <span className="text-[10px] font-medium text-gray-400 line-through px-1">
+                        —
+                      </span>
                     )}
                   </div>
                 </div>
@@ -215,14 +219,14 @@ const AgendaPanel = ({
         )}
       </div>
 
-      {/* Footer action */}
-      <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-700">
+      {/* ── Footer: new appointment ──────────────────────────────────────────── */}
+      <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-800">
         <button
           type="button"
           onClick={onNewAppointment}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 text-sm font-semibold py-2.5 transition-colors"
         >
-          <span className="text-lg leading-none">+</span>
+          <Plus className="h-4 w-4" />
           {t('appointments.newAppointment')}
         </button>
       </div>

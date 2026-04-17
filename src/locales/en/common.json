@@ -262,7 +262,9 @@
     "cancelReasonAbsent": "Absent / no-show",
     "cancelReasonCustom": "Other reason",
     "cancelReasonPlaceholder": "e.g. called to reschedule...",
-    "confirmCancel": "Confirm cancellation"
+    "confirmCancel": "Confirm cancellation",
+    "inProgress": "In progress",
+    "newEvolution": "New evolution"
   },
   "settings": {
     "title": "Settings",
