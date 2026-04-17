@@ -265,7 +265,9 @@
     "confirmCancel": "Confirm cancellation",
     "inProgress": "In progress",
     "newEvolution": "New evolution",
-    "finishAndSave": "Finish and save evolution"
+    "finishAndSave": "Finish and save evolution",
+    "evolutionPlaceholder": "Describe the treatment performed, observations and next steps...",
+    "teethTreated": "Teeth treated"
   },
   "settings": {
     "title": "Settings",

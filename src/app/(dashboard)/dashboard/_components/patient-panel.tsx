@@ -305,6 +305,26 @@ const PatientPanel = ({
     })
   }
 
+  // ── Keyboard shortcut: Cmd/Ctrl + Enter → finish appointment ────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC')
+
+      const modifier = isMac ? e.metaKey : e.ctrlKey
+
+      if (modifier && e.key === 'Enter' && !isUpdating && appointment?.status === 'scheduled') {
+        e.preventDefault()
+
+        handleFinishAppointment()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointment, isUpdating, evolutionText, evolutionTeeth, patient, token])
+
   const handleConfirmCancel = () => {
     handleCancelAppointment(cancelReason || t('dashboard.cancelReasonAbsent'))
 
@@ -418,6 +438,12 @@ const PatientPanel = ({
 
   const recentEvolutions = evolutions.slice(0, 5)
 
+  const hasEvolutionContent = evolutionText.trim().length > 0
+
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('MAC')
+
+  const shortcutHint = isMac ? '⌘↵' : 'Ctrl+↵'
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -502,30 +528,34 @@ const PatientPanel = ({
 
       {/* ── C. PRIMARY ACTION AREA ────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-5 pt-5 pb-4 space-y-3">
+        <div className="px-5 pt-5 pb-4 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             {t('dashboard.newEvolution')}
           </p>
 
+          {/* Evolution textarea */}
           <textarea
             ref={textareaRef}
             value={evolutionText}
             onChange={e => setEvolutionText(e.target.value)}
-            placeholder={t('records.descriptionPlaceholder')}
-            rows={8}
+            placeholder={t('dashboard.evolutionPlaceholder')}
+            rows={7}
             disabled={isAlreadyDone}
             className={cn(
-              'w-full rounded-xl border px-4 py-3 text-sm leading-relaxed resize-none transition-all',
+              'w-full rounded-lg border px-4 py-3 text-sm leading-relaxed resize-none transition-all',
               'text-gray-800 dark:text-gray-200 placeholder-gray-300 dark:placeholder-gray-600',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+              'focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400',
               isAlreadyDone
                 ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60 cursor-not-allowed'
-                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                : 'bg-white dark:bg-gray-900 border-gray-150 dark:border-gray-750 hover:border-gray-250 dark:hover:border-gray-600'
             )}
           />
 
-          {/* Teeth input — secondary, minimal */}
-          <div className="flex items-center gap-2">
+          {/* Teeth treated — clearly labelled, visually grouped with textarea */}
+          <div className="flex items-center gap-2.5 pt-0.5">
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 shrink-0">
+              {t('dashboard.teethTreated')}
+            </span>
             <input
               type="text"
               value={evolutionTeeth}
@@ -533,46 +563,43 @@ const PatientPanel = ({
               placeholder={t('records.teethPlaceholder')}
               title={t('records.teethHint')}
               disabled={isAlreadyDone}
-              className="w-32 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+              className="w-28 rounded-md border border-gray-150 dark:border-gray-750 px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition-colors disabled:opacity-50"
             />
-            <span className="text-xs text-gray-400 dark:text-gray-600">
-              {t('records.teethHint')}
-            </span>
           </div>
         </div>
 
-        {/* ── D. HISTORY — collapsible ──────────────────────────────────────────── */}
+        {/* ── D. HISTORY — collapsible, visually de-emphasised ─────────────────── */}
         <div className="px-5 pb-4">
           <button
             type="button"
             onClick={() => setShowHistory(v => !v)}
-            className="w-full flex items-center justify-between py-2 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors border-t border-gray-100 dark:border-gray-800"
+            className="w-full flex items-center justify-between py-2 text-[10px] font-semibold uppercase tracking-widest text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors border-t border-gray-100 dark:border-gray-800/60"
           >
             <span>{t('dashboard.lastTreatments')}</span>
             <div className="flex items-center gap-1.5">
               {evolutions.length > 0 && (
-                <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full font-medium normal-case tracking-normal">
+                <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 px-1.5 py-0.5 rounded-full font-medium normal-case tracking-normal">
                   {evolutions.length}
                 </span>
               )}
               {showHistory ? (
-                <ChevronUp className="h-3.5 w-3.5" />
+                <ChevronUp className="h-3 w-3" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
+                <ChevronDown className="h-3 w-3" />
               )}
             </div>
           </button>
 
           {showHistory && (
-            <div className="mt-2 space-y-2">
+            <div className="mt-1.5 space-y-1.5">
               {recentEvolutions.length > 0 ? (
                 recentEvolutions.map(ev => (
                   <div
                     key={ev.id}
-                    className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5 space-y-1"
+                    className="bg-gray-50/70 dark:bg-gray-800/50 rounded-lg px-3 py-2.5 space-y-1"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-300 dark:text-gray-600">
                         <Clock className="h-3 w-3" />
                         <span>{formatDate(ev.fecha, i18n.language)}</span>
                       </div>
@@ -594,7 +621,7 @@ const PatientPanel = ({
                         </button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-snug">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-snug">
                       {ev.descripcion}
                     </p>
                     {ev.dientes.length > 0 && (
@@ -602,7 +629,7 @@ const PatientPanel = ({
                         {ev.dientes.map(d => (
                           <span
                             key={d}
-                            className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono"
+                            className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
                           >
                             {d}
                           </span>
@@ -612,14 +639,14 @@ const PatientPanel = ({
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-400 dark:text-gray-500 italic py-2">
+                <p className="text-xs text-gray-300 dark:text-gray-600 italic py-1.5">
                   {t('dashboard.noTreatments')}
                 </p>
               )}
               {evolutions.length > 5 && (
                 <Link
                   href={`/patients/${patient.id}`}
-                  className="block text-center text-xs text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 py-1 transition-colors"
+                  className="block text-center text-xs text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 py-1 transition-colors"
                 >
                   {t('dashboard.allNotes')} →
                 </Link>
@@ -631,20 +658,27 @@ const PatientPanel = ({
 
       {/* ── E. FOOTER ACTIONS ─────────────────────────────────────────────────── */}
       <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-        {/* Primary CTA — single action, saves evolution + completes + advances */}
+        {/* Primary CTA */}
         {!isAlreadyDone && (
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 text-base shadow-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold h-11 text-base shadow-sm transition-all"
             type="button"
             disabled={isUpdating}
             onClick={handleFinishAppointment}
           >
             {isUpdating ? (
               <Loader2 className="h-5 w-5 animate-spin" />
-            ) : evolutionText.trim() ? (
-              t('dashboard.finishAndSave')
             ) : (
-              t('dashboard.finishAppointment')
+              <span className="flex items-center justify-center gap-2 w-full">
+                <span>
+                  {hasEvolutionContent
+                    ? t('dashboard.finishAndSave')
+                    : t('dashboard.finishAppointment')}
+                </span>
+                <kbd className="hidden sm:inline-flex items-center text-[10px] font-mono opacity-60 bg-white/20 px-1.5 py-0.5 rounded">
+                  {shortcutHint}
+                </kbd>
+              </span>
             )}
           </Button>
         )}
