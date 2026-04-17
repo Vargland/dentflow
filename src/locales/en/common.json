@@ -113,10 +113,34 @@
     "hint": "Select a condition and click a tooth to apply it.",
     "upper": "Upper",
     "lower": "Lower",
+    "upperTemp": "Upper temporary",
+    "lowerTemp": "Lower temporary",
+    "midline": "midline",
     "summary": "Summary:",
     "save": "Save odontogram",
     "saving": "Saving...",
-    "saved": "Odontogram saved"
+    "saved": "Odontogram saved",
+    "clearAll": "Clear all",
+    "permanent": "Permanent",
+    "temporary": "Temporary",
+    "legend": "Legend",
+    "tooth": "Tooth {{number}}",
+    "toothMark": "Mark",
+    "toothHealthy": "Healthy",
+    "metrics": {
+      "caries": "Caries",
+      "restauraciones": "Restorations",
+      "ausentes": "Absent",
+      "sanos": "Healthy"
+    },
+    "tools": {
+      "caries": "Caries",
+      "restauracion": "Restoration",
+      "corona": "Crown",
+      "extraccion": "Extraction",
+      "endodoncia": "Root canal",
+      "ausente": "Absent"
+    }
   },
   "records": {
     "newRecord": "New record",
@@ -203,6 +227,26 @@
       "connected": "Connected as {{email}}",
       "disconnect": "Disconnect"
     }
+  },
+  "dashboard": {
+    "title": "Today's Agenda",
+    "noAppointmentsToday": "No appointments today",
+    "selectAppointment": "Select an appointment to see the patient's file",
+    "noPatient": "No patient linked to this appointment",
+    "patientSince": "Patient since {{date}}",
+    "visits": "{{count}} visit",
+    "visits_other": "{{count}} visits",
+    "lastTreatment": "Last treatment",
+    "noTreatments": "No previous treatments",
+    "alerts": "Medical alerts",
+    "actions": "Actions",
+    "openOdontogram": "Open odontogram",
+    "scheduleAppointment": "Schedule appointment",
+    "finishAppointment": "Finish appointment",
+    "noShow": "No-show",
+    "finishing": "Finishing...",
+    "activePatient": "Active patient",
+    "viewFullRecord": "Full record"
   },
   "settings": {
     "title": "Settings",

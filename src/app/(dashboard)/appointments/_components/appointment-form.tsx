@@ -45,6 +45,8 @@ interface AppointmentFormProps {
   appointment: Appointment | null
   /** UTC datetime to pre-fill the start time (for click-to-create). */
   defaultStart?: Date
+  /** Patient ID to pre-select when creating a new appointment from the dashboard. */
+  prefilledPatientId?: string
   /** IANA timezone of the doctor. */
   timezone: string
   /** Called after a successful create/update/delete. */
@@ -60,6 +62,7 @@ interface AppointmentFormProps {
 export const AppointmentForm = ({
   appointment,
   defaultStart,
+  prefilledPatientId,
   timezone,
   onSuccess,
   onClose,
@@ -95,7 +98,9 @@ export const AppointmentForm = ({
 
   const [title, setTitle] = useState(appointment?.title ?? '')
 
-  const [patientId, setPatientId] = useState<string>(appointment?.patient_id ?? '')
+  const [patientId, setPatientId] = useState<string>(
+    appointment?.patient_id ?? prefilledPatientId ?? ''
+  )
 
   const [status, setStatus] = useState(appointment?.status ?? 'scheduled')
 

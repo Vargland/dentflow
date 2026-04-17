@@ -113,10 +113,34 @@
     "hint": "Selecciona un estado y haz click en el diente para marcarlo.",
     "upper": "Superior",
     "lower": "Inferior",
+    "upperTemp": "Superior temporal",
+    "lowerTemp": "Inferior temporal",
+    "midline": "linea media",
     "summary": "Resumen:",
     "save": "Guardar odontograma",
     "saving": "Guardando...",
-    "saved": "Odontograma guardado"
+    "saved": "Odontograma guardado",
+    "clearAll": "Limpiar todo",
+    "permanent": "Permanente",
+    "temporary": "Temporal",
+    "legend": "Leyenda",
+    "tooth": "Diente {{number}}",
+    "toothMark": "Marca",
+    "toothHealthy": "Sano",
+    "metrics": {
+      "caries": "Caries",
+      "restauraciones": "Restauraciones",
+      "ausentes": "Ausentes",
+      "sanos": "Sanos"
+    },
+    "tools": {
+      "caries": "Caries",
+      "restauracion": "Restauracion",
+      "corona": "Corona",
+      "extraccion": "Extraccion",
+      "endodoncia": "Endodoncia",
+      "ausente": "Ausente"
+    }
   },
   "records": {
     "newRecord": "Nueva evolucion",
@@ -203,6 +227,26 @@
       "connected": "Conectado como {{email}}",
       "disconnect": "Desconectar"
     }
+  },
+  "dashboard": {
+    "title": "Agenda de Hoy",
+    "noAppointmentsToday": "Sin turnos para hoy",
+    "selectAppointment": "Selecciona un turno para ver la ficha del paciente",
+    "noPatient": "Este turno no tiene paciente asignado",
+    "patientSince": "Paciente desde {{date}}",
+    "visits": "{{count}} visita",
+    "visits_other": "{{count}} visitas",
+    "lastTreatment": "Ultimo tratamiento",
+    "noTreatments": "Sin tratamientos previos",
+    "alerts": "Alertas medicas",
+    "actions": "Acciones",
+    "openOdontogram": "Abrir odontograma",
+    "scheduleAppointment": "Agendar turno",
+    "finishAppointment": "Finalizar turno",
+    "noShow": "No se presento",
+    "finishing": "Finalizando...",
+    "activePatient": "Paciente activo",
+    "viewFullRecord": "Ver ficha completa"
   },
   "settings": {
     "title": "Configuracion",
