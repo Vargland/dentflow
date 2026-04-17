@@ -13,6 +13,7 @@ import {
   Loader2,
   Mail,
   Phone,
+  Plus,
   ScanLine,
   Search,
   Stethoscope,
@@ -29,7 +30,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { updateAppointment } from '@/services/appointments.service'
-import { getEvolutions } from '@/services/evolution.service'
+import { createEvolution, getEvolutions } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -160,7 +161,13 @@ const PatientPanel = ({
 
   const [cancelReason, setCancelReason] = useState('')
 
+  const [showAddEvolution, setShowAddEvolution] = useState(false)
+
+  const [evolutionText, setEvolutionText] = useState('')
+
   const [isUpdating, startUpdate] = useTransition()
+
+  const [isSavingEvolution, startSaveEvolution] = useTransition()
 
   // Load patient + evolutions whenever the selected appointment changes
   useEffect(() => {
@@ -249,6 +256,26 @@ const PatientPanel = ({
     setShowCancelModal(false)
 
     setCancelReason('')
+  }
+
+  const handleSaveEvolution = () => {
+    if (!patient || !evolutionText.trim()) return
+
+    startSaveEvolution(async () => {
+      try {
+        const ev = await createEvolution(token, patient.id, { descripcion: evolutionText.trim() })
+
+        setEvolutions(prev => [ev, ...prev])
+
+        setEvolutionText('')
+
+        setShowAddEvolution(false)
+
+        toast.success(t('records.saved'))
+      } catch {
+        toast.error(t('appointmentDetail.evolutionError'))
+      }
+    })
   }
 
   // ── Empty states ─────────────────────────────────────────────────────────────
@@ -349,13 +376,23 @@ const PatientPanel = ({
       {/* ── Scrollable body ───────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
         {/* 1. Patient header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           <Avatar nombre={patient.nombre} apellido={patient.apellido} />
 
-          <div className="min-w-0">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
-              {patient.apellido}, {patient.nombre}
-            </h2>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                {patient.apellido}, {patient.nombre}
+              </h2>
+              <Link
+                href={`/patients/${patient.id}`}
+                className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0 mt-1"
+              >
+                {t('dashboard.viewFullRecord')}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
               {age !== null && (
                 <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -368,15 +405,29 @@ const PatientPanel = ({
                 </span>
               )}
             </div>
-          </div>
 
-          <Link
-            href={`/patients/${patient.id}`}
-            className="ml-auto flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"
-          >
-            {t('dashboard.viewFullRecord')}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Link>
+            {/* Contact inline */}
+            <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-2">
+              {patient.telefono && (
+                <a
+                  href={`tel:${patient.telefono}`}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  {patient.telefono}
+                </a>
+              )}
+              {patient.email && (
+                <a
+                  href={`mailto:${patient.email}`}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {patient.email}
+                </a>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 2. Medical alerts */}
@@ -392,22 +443,72 @@ const PatientPanel = ({
           </div>
         )}
 
-        {/* 3. Last 2 treatments + "see all" link */}
+        {/* 3. Evolutions — list + inline add form */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {t('dashboard.lastTreatments')}
             </p>
-            {evolutions.length > 2 && (
+            <div className="flex items-center gap-3">
+              {evolutions.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllNotes(true)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {t('dashboard.allNotes')}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setShowAllNotes(true)}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => setShowAddEvolution(v => !v)}
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
               >
-                {t('dashboard.allNotes')}
+                <Plus className="h-3.5 w-3.5" />
+                {t('records.newRecord')}
               </button>
-            )}
+            </div>
           </div>
+
+          {/* Inline add-evolution form */}
+          {showAddEvolution && (
+            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 space-y-3">
+              <textarea
+                value={evolutionText}
+                onChange={e => setEvolutionText(e.target.value)}
+                placeholder={t('records.descriptionPlaceholder')}
+                rows={3}
+                autoFocus
+                className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddEvolution(false)
+
+                    setEvolutionText('')
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1"
+                >
+                  {t('records.cancel')}
+                </button>
+                <button
+                  type="button"
+                  disabled={!evolutionText.trim() || isSavingEvolution}
+                  onClick={handleSaveEvolution}
+                  className="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md transition-colors"
+                >
+                  {isSavingEvolution ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                  {t('records.save')}
+                </button>
+              </div>
+            </div>
+          )}
 
           {recentEvolutions.length > 0 ? (
             <div className="space-y-2">
@@ -442,28 +543,6 @@ const PatientPanel = ({
             <p className="text-sm text-gray-400 dark:text-gray-500 italic">
               {t('dashboard.noTreatments')}
             </p>
-          )}
-        </div>
-
-        {/* 5. Quick contact */}
-        <div className="flex gap-2">
-          {patient.telefono && (
-            <a
-              href={`tel:${patient.telefono}`}
-              className="flex-1 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              {patient.telefono}
-            </a>
-          )}
-          {patient.email && (
-            <a
-              href={`mailto:${patient.email}`}
-              className="flex-1 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              {patient.email}
-            </a>
           )}
         </div>
       </div>
