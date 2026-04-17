@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { Fragment, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import {
@@ -23,6 +23,7 @@ import type { Patient } from '@/typing/services/patient.interface'
 import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { updateAppointment } from '@/services/appointments.service'
 import { getEvolutions } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
@@ -144,6 +145,8 @@ const PatientPanel = ({
 
   const [loading, setLoading] = useState(false)
 
+  const [showAllNotes, setShowAllNotes] = useState(false)
+
   const [isUpdating, startUpdate] = useTransition()
 
   // Load patient + evolutions whenever the selected appointment changes
@@ -151,6 +154,8 @@ const PatientPanel = ({
     const patientId = appointment?.patient_id
 
     let cancelled = false
+
+    setShowAllNotes(false)
 
     const load = async () => {
       if (!patientId || !token) {
@@ -262,9 +267,9 @@ const PatientPanel = ({
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
-  const lastEvolution = evolutions[0] ?? null
-
   const visitCount = evolutions.length
+
+  const recentEvolutions = evolutions.slice(0, 2)
 
   const patientSinceDate = formatDate(patient.createdAt, i18n.language)
 
@@ -339,10 +344,10 @@ const PatientPanel = ({
             <Stethoscope className="h-4 w-4 text-blue-500 shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                {t('dashboard.visits')}
+                {t('dashboard.visitsLabel')}
               </p>
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                {t('dashboard.visits', { count: visitCount })}
+                {t('dashboard.visitsCount', { count: visitCount })}
               </p>
             </div>
           </div>
@@ -351,7 +356,7 @@ const PatientPanel = ({
             <Calendar className="h-4 w-4 text-blue-500 shrink-0" />
             <div className="min-w-0">
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                {t('dashboard.patientSince', { date: '' }).replace(' ', '')}
+                {t('dashboard.patientSince')}
               </p>
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                 {patientSinceDate}
@@ -360,33 +365,51 @@ const PatientPanel = ({
           </div>
         </div>
 
-        {/* 4. Last treatment */}
+        {/* 4. Last 2 treatments + "see all" link */}
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-            {t('dashboard.lastTreatment')}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              {t('dashboard.lastTreatments')}
+            </p>
+            {evolutions.length > 2 && (
+              <button
+                type="button"
+                onClick={() => setShowAllNotes(true)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {t('dashboard.allNotes')}
+              </button>
+            )}
+          </div>
 
-          {lastEvolution ? (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-3 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{formatDate(lastEvolution.fecha, i18n.language)}</span>
-              </div>
-              <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
-                {lastEvolution.descripcion}
-              </p>
-              {lastEvolution.dientes.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {lastEvolution.dientes.map(d => (
-                    <span
-                      key={d}
-                      className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono"
-                    >
-                      {d}
-                    </span>
-                  ))}
+          {recentEvolutions.length > 0 ? (
+            <div className="space-y-2">
+              {recentEvolutions.map(ev => (
+                <div
+                  key={ev.id}
+                  className="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-3 space-y-1.5"
+                >
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{formatDate(ev.fecha, i18n.language)}</span>
+                  </div>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                    {ev.descripcion}
+                  </p>
+                  {ev.dientes.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {ev.dientes.map(d => (
+                        <span
+                          key={d}
+                          className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           ) : (
             <p className="text-sm text-gray-400 dark:text-gray-500 italic">
@@ -489,6 +512,46 @@ const PatientPanel = ({
           </div>
         )}
       </div>
+
+      {/* ── All notes modal ───────────────────────────────────────────────────── */}
+      <Dialog open={showAllNotes} onOpenChange={open => setShowAllNotes(open)}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('dashboard.allNotesTitle')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            {evolutions.map((ev, idx) => (
+              <Fragment key={ev.id}>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{formatDate(ev.fecha, i18n.language)}</span>
+                  </div>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                    {ev.descripcion}
+                  </p>
+                  {ev.dientes.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {ev.dientes.map(d => (
+                        <span
+                          key={d}
+                          className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {idx < evolutions.length - 1 && (
+                  <hr className="border-gray-100 dark:border-gray-700" />
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
