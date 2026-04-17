@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ArrowDownUp,
   Calendar,
+  CheckCircle2,
   Clock,
   ExternalLink,
   Loader2,
@@ -31,7 +32,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { updateAppointment } from '@/services/appointments.service'
-import { createEvolution, getEvolutions } from '@/services/evolution.service'
+import { createEvolution, getEvolutions, updateEvolution } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -166,11 +167,17 @@ const PatientPanel = ({
 
   const [evolutionTeeth, setEvolutionTeeth] = useState('')
 
+  const [evolutionImporte, setEvolutionImporte] = useState('')
+
+  const [evolutionPagado, setEvolutionPagado] = useState(false)
+
   const [evolutionSortAsc, setEvolutionSortAsc] = useState(true)
 
   const [isUpdating, startUpdate] = useTransition()
 
   const [isSavingEvolution, startSaveEvolution] = useTransition()
+
+  const [togglingPaidId, setTogglingPaidId] = useState<string | null>(null)
 
   // Load patient + evolutions whenever the selected appointment changes
   useEffect(() => {
@@ -271,9 +278,13 @@ const PatientPanel = ({
           .map(s => parseInt(s.trim(), 10))
           .filter(n => !isNaN(n) && n > 0)
 
+        const importeNum = evolutionImporte !== '' ? parseFloat(evolutionImporte) : undefined
+
         const ev = await createEvolution(token, patient.id, {
           descripcion: evolutionText.trim(),
           dientes: teeth.length > 0 ? teeth : undefined,
+          importe: importeNum && !isNaN(importeNum) ? importeNum : undefined,
+          pagado: evolutionPagado,
         })
 
         setEvolutions(prev => [ev, ...prev])
@@ -282,11 +293,36 @@ const PatientPanel = ({
 
         setEvolutionTeeth('')
 
+        setEvolutionImporte('')
+
+        setEvolutionPagado(false)
+
         toast.success(t('records.saved'))
       } catch {
         toast.error(t('appointmentDetail.evolutionError'))
       }
     })
+  }
+
+  const handleTogglePaid = async (ev: Evolution) => {
+    if (!patient || togglingPaidId === ev.id) return
+
+    setTogglingPaidId(ev.id)
+
+    try {
+      const updated = await updateEvolution({
+        token,
+        patientId: patient.id,
+        evolutionId: ev.id,
+        input: { pagado: !ev.pagado },
+      })
+
+      setEvolutions(prev => prev.map(e => (e.id === updated.id ? updated : e)))
+    } catch {
+      toast.error(t('appointmentDetail.evolutionError'))
+    } finally {
+      setTogglingPaidId(null)
+    }
   }
 
   // ── Empty states ─────────────────────────────────────────────────────────────
@@ -375,6 +411,27 @@ const PatientPanel = ({
 
   const isAlreadyDone = appointment.status === 'completed' || appointment.status === 'cancelled'
 
+  // ── Balance calculation ──────────────────────────────────────────────────────
+  const evWithImporte = evolutions.filter(e => e.importe !== null && e.importe !== undefined)
+
+  const totalAmount = evWithImporte.reduce((sum, e) => sum + (e.importe ?? 0), 0)
+
+  const paidAmount = evWithImporte
+    .filter(e => e.pagado)
+    .reduce((sum, e) => sum + (e.importe ?? 0), 0)
+
+  const pendingAmount = totalAmount - paidAmount
+
+  const hasBalance = evWithImporte.length > 0
+
+  const formatCurrency = (n: number) =>
+    n.toLocaleString(i18n.language === 'es' ? 'es-AR' : 'en-US', {
+      style: 'currency',
+      currency: i18n.language === 'es' ? 'ARS' : 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -456,7 +513,49 @@ const PatientPanel = ({
           </div>
         )}
 
-        {/* 3. Evolutions list */}
+        {/* 3. Balance summary */}
+        {hasBalance && (
+          <div className="rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+              {t('dashboard.balance')}
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                  {t('dashboard.balanceTotal')}
+                </p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  {formatCurrency(totalAmount)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                  {t('records.paid')}
+                </p>
+                <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                  {formatCurrency(paidAmount)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+                  {t('records.pending')}
+                </p>
+                <p
+                  className={cn(
+                    'text-sm font-semibold',
+                    pendingAmount > 0
+                      ? 'text-orange-500 dark:text-orange-400'
+                      : 'text-gray-400 dark:text-gray-500'
+                  )}
+                >
+                  {formatCurrency(pendingAmount)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Evolutions list */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
@@ -467,7 +566,7 @@ const PatientPanel = ({
                 type="button"
                 onClick={() => setEvolutionSortAsc(v => !v)}
                 className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title={evolutionSortAsc ? 'Más recientes primero' : 'Más antiguas primero'}
+                title={evolutionSortAsc ? t('dashboard.sortNewest') : t('dashboard.sortOldest')}
               >
                 <ArrowDownUp className="h-3.5 w-3.5" />
                 {evolutionSortAsc ? t('dashboard.sortOldest') : t('dashboard.sortNewest')}
@@ -491,9 +590,38 @@ const PatientPanel = ({
                   key={ev.id}
                   className="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-3 space-y-1.5"
                 >
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{formatDate(ev.fecha, i18n.language)}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{formatDate(ev.fecha, i18n.language)}</span>
+                    </div>
+                    {ev.importe !== null && ev.importe !== undefined && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                          {formatCurrency(ev.importe)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePaid(ev)}
+                          disabled={togglingPaidId === ev.id}
+                          title={ev.pagado ? t('records.markPending') : t('records.markPaid')}
+                          className={cn(
+                            'flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors',
+                            togglingPaidId === ev.id && 'opacity-50 cursor-wait',
+                            ev.pagado
+                              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'
+                              : 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-800'
+                          )}
+                        >
+                          {togglingPaidId === ev.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          {ev.pagado ? t('records.paid') : t('records.pending')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
                     {ev.descripcion}
@@ -539,14 +667,39 @@ const PatientPanel = ({
             value={evolutionTeeth}
             onChange={e => setEvolutionTeeth(e.target.value)}
             placeholder={t('records.teethPlaceholder')}
-            className="w-36 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 transition-colors"
+            title={t('records.teethHint')}
+            className="w-24 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 transition-colors"
           />
-          <span className="text-xs text-gray-400 flex-1">{t('records.teethHint')}</span>
+          <div className="relative flex items-center">
+            <span className="absolute left-2.5 text-xs text-gray-400 pointer-events-none">$</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={evolutionImporte}
+              onChange={e => setEvolutionImporte(e.target.value)}
+              placeholder={t('records.amountPlaceholder')}
+              className="w-24 rounded-lg border border-gray-200 dark:border-gray-700 pl-6 pr-2 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-900 transition-colors"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setEvolutionPagado(v => !v)}
+            className={cn(
+              'flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors shrink-0',
+              evolutionPagado
+                ? 'border-green-400 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
+                : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+            )}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {evolutionPagado ? t('records.paid') : t('records.pending')}
+          </button>
           <Button
             type="button"
             disabled={!evolutionText.trim() || isSavingEvolution}
             onClick={handleSaveEvolution}
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shrink-0"
           >
             {isSavingEvolution ? (
               <Loader2 className="h-4 w-4 animate-spin" />

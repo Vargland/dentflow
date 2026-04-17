@@ -160,7 +160,10 @@
     "emptyHint": "Add the first clinical record for this patient",
     "teeth": "Teeth:",
     "paid": "Paid",
-    "pending": "Pending"
+    "pending": "Pending",
+    "markPaid": "Mark as paid",
+    "markPending": "Mark as pending",
+    "amountPlaceholder": "Amount"
   },
   "appointmentDetail": {
     "tabs": {
@@ -262,7 +265,9 @@
     "cancelReasonAbsent": "Absent / no-show",
     "cancelReasonCustom": "Other reason",
     "cancelReasonPlaceholder": "e.g. called to reschedule...",
-    "confirmCancel": "Confirm cancellation"
+    "confirmCancel": "Confirm cancellation",
+    "balance": "Balance",
+    "balanceTotal": "Total"
   },
   "settings": {
     "title": "Settings",
