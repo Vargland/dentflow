@@ -48,7 +48,7 @@ export const Navbar = ({ user, lang }: NavbarProps) => {
   const initials = user.name
     ? user.name
         .split(' ')
-        .map(n => n[0])
+        .map(part => part[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)

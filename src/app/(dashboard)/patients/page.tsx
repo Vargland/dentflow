@@ -64,29 +64,29 @@ export default async function PatientsPage({ searchParams }: PatientListSearchPa
       ) : (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {patients.map(p => (
-              <li key={p.id}>
+            {patients.map(patient => (
+              <li key={patient.id}>
                 <Link
-                  href={`/patients/${p.id}`}
+                  href={`/patients/${patient.id}`}
                   className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                      {p.apellido}, {p.nombre}
+                      {patient.apellido}, {patient.nombre}
                     </p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {p.dni && <span>ID {p.dni}</span>}
-                      {p.telefono && <span>{p.telefono}</span>}
-                      {p.obraSocial && (
+                      {patient.dni && <span>ID {patient.dni}</span>}
+                      {patient.telefono && <span>{patient.telefono}</span>}
+                      {patient.obraSocial && (
                         <Badge variant="secondary" className="text-xs">
-                          {p.obraSocial}
+                          {patient.obraSocial}
                         </Badge>
                       )}
                     </div>
                   </div>
                   <div className="ml-4 flex items-center gap-3 shrink-0">
                     <span className="text-xs text-gray-400 hidden sm:block">
-                      {t('patients.entries', { count: p.evolutionCount })}
+                      {t('patients.entries', { count: patient.evolutionCount })}
                     </span>
                     <svg
                       className="h-4 w-4 text-gray-400"

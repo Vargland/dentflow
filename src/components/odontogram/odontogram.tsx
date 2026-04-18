@@ -175,8 +175,8 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
 
   const markedSurfaces = selectedState
     ? (Object.entries(selectedState.surfaces) as Array<[Surface, MarkType | null]>)
-        .filter(([, v]) => v !== null)
-        .map(([k, v]) => `${k}: ${v}`)
+        .filter(([, mark]) => mark !== null)
+        .map(([surface, mark]) => `${surface}: ${mark}`)
     : []
 
   return (
@@ -214,19 +214,19 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
 
       {/* ── Dentition tabs ──────────────────────────────────────────────────── */}
       <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
-        {(['permanent', 'temporary'] as const).map(d => (
+        {(['permanent', 'temporary'] as const).map(dentitionOption => (
           <button
-            key={d}
+            key={dentitionOption}
             type="button"
-            onClick={() => setDentition(d)}
+            onClick={() => setDentition(dentitionOption)}
             className={cn(
               'text-xs font-medium px-3 py-1 rounded-t transition-colors',
-              dentition === d
+              dentition === dentitionOption
                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-b-0 border-gray-200 dark:border-gray-700'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             )}
           >
-            {t(`odontogram.${d}`)}
+            {t(`odontogram.${dentitionOption}`)}
           </button>
         ))}
       </div>
@@ -310,9 +310,9 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
               )}
               {markedSurfaces.length > 0 ? (
                 <ul className="space-y-0.5">
-                  {markedSurfaces.map(s => (
-                    <li key={s} className="text-[10px] text-gray-600 dark:text-gray-300">
-                      {s}
+                  {markedSurfaces.map(surfaceLabel => (
+                    <li key={surfaceLabel} className="text-[10px] text-gray-600 dark:text-gray-300">
+                      {surfaceLabel}
                     </li>
                   ))}
                 </ul>

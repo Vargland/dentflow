@@ -34,10 +34,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
 
   const fechaStr = patient?.fechaNacimiento ? patient.fechaNacimiento.split('T')[0] : ''
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-    const fd = new FormData(e.currentTarget)
+    const fd = new FormData(event.currentTarget)
 
     const input: CreatePatientInput = {
       nombre: fd.get('nombre') as string,
@@ -90,7 +90,7 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="sexo">{t('patientForm.fields.sex')}</Label>
-            <Select value={sexo} onValueChange={v => setSexo(v ?? '')}>
+            <Select value={sexo} onValueChange={value => setSexo(value ?? '')}>
               <SelectTrigger id="sexo">
                 <SelectValue placeholder={t('patientForm.sex.select')} />
               </SelectTrigger>

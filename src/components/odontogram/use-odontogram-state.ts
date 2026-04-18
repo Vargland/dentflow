@@ -49,21 +49,21 @@ const blankTooth = (): ToothState => ({
  * Maps the legacy API surface state string to the v2 MarkType or null.
  * Only caries/cavity and filled/restauracion have equivalents; other states are ignored.
  *
- * @param s - Legacy surface state string from the API.
+ * @param legacyState - Legacy surface state string from the API.
  * @returns Corresponding MarkType or null.
  */
-const legacySurfaceToMark = (s: string | undefined): MarkType | null => {
-  if (!s) return null
+const legacySurfaceToMark = (legacyState: string | undefined): MarkType | null => {
+  if (!legacyState) return null
 
-  if (s === 'cavity') return 'caries'
+  if (legacyState === 'cavity') return 'caries'
 
-  if (s === 'filled') return 'restauracion'
+  if (legacyState === 'filled') return 'restauracion'
 
-  if (s === 'crown') return 'corona'
+  if (legacyState === 'crown') return 'corona'
 
-  if (s === 'extraction' || s === 'extracted') return 'extraccion'
+  if (legacyState === 'extraction' || legacyState === 'extracted') return 'extraccion'
 
-  if (s === 'rootcanal') return 'endodoncia'
+  if (legacyState === 'rootcanal') return 'endodoncia'
 
   return null
 }
@@ -171,11 +171,12 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
       continue
     }
 
-    const hasCaries = Object.values(tooth.surfaces).some(v => v === 'caries')
+    const hasCaries = Object.values(tooth.surfaces).some(mark => mark === 'caries')
 
-    const hasRestaur = Object.values(tooth.surfaces).some(v => v === 'restauracion')
+    const hasRestaur = Object.values(tooth.surfaces).some(mark => mark === 'restauracion')
 
-    const hasAnyMark = tooth.mark !== null || Object.values(tooth.surfaces).some(v => v !== null)
+    const hasAnyMark =
+      tooth.mark !== null || Object.values(tooth.surfaces).some(mark => mark !== null)
 
     if (hasCaries) caries++
     else if (hasRestaur) restauraciones++
@@ -204,7 +205,7 @@ export interface UseOdontogramStateReturn {
   /** Switch the active tool. */
   setActiveTool: (tool: ActiveTool) => void
   /** Switch dentition. */
-  setDentition: (d: DentitionType) => void
+  setDentition: (dentitionType: DentitionType) => void
   /** Handle a surface click on a tooth. */
   handleSurfaceClick: (fdi: number, surface: Surface) => void
   /** Handle a whole-tooth click for whole-tooth tools. */

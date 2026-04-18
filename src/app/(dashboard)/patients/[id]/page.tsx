@@ -30,9 +30,9 @@ const calcAge = (dob: string): number => {
 
   let age = today.getFullYear() - birth.getFullYear()
 
-  const m = today.getMonth() - birth.getMonth()
+  const monthDiff = today.getMonth() - birth.getMonth()
 
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
 
   return age
 }
