@@ -44,7 +44,7 @@ export default async function DashboardPage() {
 
   // Sort by start_time ascending
   const sorted = [...appointments].sort(
-    (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    (first, second) => new Date(first.start_time).getTime() - new Date(second.start_time).getTime()
   )
 
   return <DashboardShell initialAppointments={sorted} timezone={settings.timezone} />
