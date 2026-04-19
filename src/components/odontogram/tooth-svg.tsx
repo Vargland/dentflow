@@ -92,7 +92,7 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
       width={SIZE}
       height={SIZE}
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      aria-label={`Diente ${fdi} — ${ariaDescription()}`}
+      aria-label={`${t('odontogram.tooth', { number: fdi })} — ${ariaDescription()}`}
       role="img"
     >
       {/* ── M (Mesial) — top trapezoid ───────────────────────────────────────── */}
