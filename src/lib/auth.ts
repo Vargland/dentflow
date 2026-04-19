@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1
 
 const allowedEmails = (process.env.ALLOWED_EMAILS ?? '')
   .split(',')
-  .map(e => e.trim())
+  .map(entry => entry.trim())
   .filter(Boolean)
 
 /** Thrown when the Go API returns 401 on credentials login. */

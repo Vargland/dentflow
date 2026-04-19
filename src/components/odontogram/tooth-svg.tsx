@@ -1,7 +1,8 @@
 'use client'
 
-import type { MarkType, Surface, ToothState } from './types'
-import { TOOL_COLORS } from './types'
+import type { MarkType, Surface, ToothState } from '@/typing/components/odontogram.types'
+import { useTranslation } from '@/lib/i18n/client'
+import { MARK, TOOL_COLORS } from '@/constants/odontogram'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -9,7 +10,7 @@ import { TOOL_COLORS } from './types'
 const STROKE = '#9ca3af'
 
 /** Stroke width for surface borders. */
-const SW = 0.75
+const STROKE_WIDTH = 0.75
 
 /** Fill when no mark is applied to a surface (white). */
 const FILL_EMPTY = '#ffffff'
@@ -18,10 +19,10 @@ const FILL_EMPTY = '#ffffff'
  * Viewbox size for each tooth SVG.
  * Surfaces occupy the full box; the outer border rect sits on top.
  */
-const SZ = 40
+const SIZE = 40
 
 /** Inner square inset — distance from outer edge to center square. */
-const IN = 10
+const INSET = 10
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -59,40 +60,44 @@ export interface ToothSVGProps {
  * @param onSurfaceClick - Callback fired with the clicked surface identifier.
  */
 const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
+  const { t } = useTranslation()
+
   const { surfaces, mark } = state
 
   /** Describe the tooth state for screen readers. */
   const ariaDescription = (): string => {
     const parts: string[] = []
 
-    if (mark) parts.push(mark)
+    if (mark) parts.push(t(`odontogram.tools.${mark}`))
 
     const surfaceMarks = (Object.entries(surfaces) as Array<[Surface, MarkType | null]>)
-      .filter(([, v]) => v !== null)
-      .map(([k, v]) => `${k}:${v}`)
+      .filter(([, surfaceMark]) => surfaceMark !== null)
+      .map(
+        ([surface, surfaceMark]) => `${surface}:${t(`odontogram.tools.${surfaceMark as MarkType}`)}`
+      )
 
     parts.push(...surfaceMarks)
 
-    return parts.length ? parts.join(', ') : 'sano'
+    return parts.length ? parts.join(', ') : t('odontogram.ariaHealthy')
   }
 
   const sharedPathProps = {
     stroke: STROKE,
-    strokeWidth: SW,
+    strokeWidth: STROKE_WIDTH,
     className: 'cursor-pointer hover:opacity-75 transition-opacity',
   }
 
   return (
     <svg
-      width={SZ}
-      height={SZ}
-      viewBox={`0 0 ${SZ} ${SZ}`}
-      aria-label={`Diente ${fdi} — ${ariaDescription()}`}
+      width={SIZE}
+      height={SIZE}
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      aria-label={`${t('odontogram.tooth', { number: fdi })} — ${ariaDescription()}`}
       role="img"
     >
       {/* ── M (Mesial) — top trapezoid ───────────────────────────────────────── */}
       <polygon
-        points={`0,0 ${SZ},0 ${SZ - IN},${IN} ${IN},${IN}`}
+        points={`0,0 ${SIZE},0 ${SIZE - INSET},${INSET} ${INSET},${INSET}`}
         fill={surfaceFill(surfaces.M)}
         onClick={() => onSurfaceClick('M')}
         aria-label="Mesial"
@@ -101,7 +106,7 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
 
       {/* ── D (Distal) — bottom trapezoid ────────────────────────────────────── */}
       <polygon
-        points={`0,${SZ} ${SZ},${SZ} ${SZ - IN},${SZ - IN} ${IN},${SZ - IN}`}
+        points={`0,${SIZE} ${SIZE},${SIZE} ${SIZE - INSET},${SIZE - INSET} ${INSET},${SIZE - INSET}`}
         fill={surfaceFill(surfaces.D)}
         onClick={() => onSurfaceClick('D')}
         aria-label="Distal"
@@ -110,7 +115,7 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
 
       {/* ── V (Vestibular) — left trapezoid ──────────────────────────────────── */}
       <polygon
-        points={`0,0 ${IN},${IN} ${IN},${SZ - IN} 0,${SZ}`}
+        points={`0,0 ${INSET},${INSET} ${INSET},${SIZE - INSET} 0,${SIZE}`}
         fill={surfaceFill(surfaces.V)}
         onClick={() => onSurfaceClick('V')}
         aria-label="Vestibular"
@@ -119,7 +124,7 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
 
       {/* ── P (Palatino) — right trapezoid ───────────────────────────────────── */}
       <polygon
-        points={`${SZ},0 ${SZ},${SZ} ${SZ - IN},${SZ - IN} ${SZ - IN},${IN}`}
+        points={`${SIZE},0 ${SIZE},${SIZE} ${SIZE - INSET},${SIZE - INSET} ${SIZE - INSET},${INSET}`}
         fill={surfaceFill(surfaces.P)}
         onClick={() => onSurfaceClick('P')}
         aria-label="Palatino"
@@ -128,10 +133,10 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
 
       {/* ── O (Oclusal) — center square ──────────────────────────────────────── */}
       <rect
-        x={IN}
-        y={IN}
-        width={SZ - IN * 2}
-        height={SZ - IN * 2}
+        x={INSET}
+        y={INSET}
+        width={SIZE - INSET * 2}
+        height={SIZE - INSET * 2}
         fill={surfaceFill(surfaces.O)}
         onClick={() => onSurfaceClick('O')}
         aria-label="Oclusal"
@@ -142,50 +147,50 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
       <rect
         x={0}
         y={0}
-        width={SZ}
-        height={SZ}
+        width={SIZE}
+        height={SIZE}
         fill="none"
         stroke={STROKE}
-        strokeWidth={SW}
+        strokeWidth={STROKE_WIDTH}
         pointerEvents="none"
       />
 
       {/* ── Whole-tooth overlays ─────────────────────────────────────────────── */}
-      {mark === 'corona' && (
+      {mark === MARK.CROWN && (
         <circle
-          cx={SZ / 2}
-          cy={SZ / 2}
-          r={SZ / 2 - 2}
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={SIZE / 2 - 2}
           fill="none"
-          stroke={TOOL_COLORS.corona}
+          stroke={TOOL_COLORS[MARK.CROWN]}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'extraccion' && (
-        <g stroke={TOOL_COLORS.extraccion} strokeWidth="2.5" pointerEvents="none">
-          <line x1="4" y1="4" x2={SZ - 4} y2={SZ - 4} />
-          <line x1={SZ - 4} y1="4" x2="4" y2={SZ - 4} />
+      {mark === MARK.EXTRACTION && (
+        <g stroke={TOOL_COLORS[MARK.EXTRACTION]} strokeWidth="2.5" pointerEvents="none">
+          <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
+          <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
       )}
 
-      {mark === 'endodoncia' && (
+      {mark === MARK.ROOTCANAL && (
         <line
-          x1={SZ / 2}
+          x1={SIZE / 2}
           y1="2"
-          x2={SZ / 2}
-          y2={SZ - 2}
-          stroke={TOOL_COLORS.endodoncia}
+          x2={SIZE / 2}
+          y2={SIZE - 2}
+          stroke={TOOL_COLORS[MARK.ROOTCANAL]}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'ausente' && (
-        <g stroke={TOOL_COLORS.ausente} strokeWidth="1.5" pointerEvents="none">
-          <line x1="4" y1="4" x2={SZ - 4} y2={SZ - 4} />
-          <line x1={SZ - 4} y1="4" x2="4" y2={SZ - 4} />
+      {mark === MARK.EXTRACTED && (
+        <g stroke={TOOL_COLORS[MARK.EXTRACTED]} strokeWidth="1.5" pointerEvents="none">
+          <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
+          <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
       )}
     </svg>

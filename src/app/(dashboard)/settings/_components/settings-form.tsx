@@ -125,7 +125,7 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
             <Input
               id="doctor-name"
               value={doctorName}
-              onChange={e => setDoctorName(e.target.value)}
+              onChange={event => setDoctorName(event.target.value)}
               placeholder="Dr. Nombre Apellido"
             />
           </div>
@@ -135,7 +135,7 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
             <Input
               id="clinic-address"
               value={clinicAddress}
-              onChange={e => setClinicAddress(e.target.value)}
+              onChange={event => setClinicAddress(event.target.value)}
               placeholder="Av. Corrientes 1234, CABA"
             />
           </div>
@@ -145,14 +145,17 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
             <Input
               id="clinic-phone"
               value={clinicPhone}
-              onChange={e => setClinicPhone(e.target.value)}
+              onChange={event => setClinicPhone(event.target.value)}
               placeholder="+54 11 1234-5678"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email-language">{t('settings.emailLanguage')}</Label>
-            <Select value={emailLanguage} onValueChange={v => setEmailLanguage(v ?? emailLanguage)}>
+            <Select
+              value={emailLanguage}
+              onValueChange={value => setEmailLanguage(value ?? emailLanguage)}
+            >
               <SelectTrigger id="email-language" className="w-full">
                 <SelectValue>{emailLanguageLabel}</SelectValue>
               </SelectTrigger>
@@ -173,14 +176,14 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
 
           <div className="space-y-2">
             <Label htmlFor="timezone">{t('settings.timezone')}</Label>
-            <Select value={timezone} onValueChange={v => setTimezone(v ?? timezone)}>
+            <Select value={timezone} onValueChange={value => setTimezone(value ?? timezone)}>
               <SelectTrigger id="timezone" className="w-full">
                 <SelectValue placeholder={t('settings.timezonePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {TIMEZONES.map(tz => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz.replace(/_/g, ' ')}
+                {TIMEZONES.map(timezoneName => (
+                  <SelectItem key={timezoneName} value={timezoneName}>
+                    {timezoneName.replace(/_/g, ' ')}
                   </SelectItem>
                 ))}
               </SelectContent>

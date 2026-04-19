@@ -97,7 +97,7 @@ const EvolutionRow = ({ ev }: { ev: Evolution }) => {
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(prev => !prev)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors text-left"
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -107,9 +107,9 @@ const EvolutionRow = ({ ev }: { ev: Evolution }) => {
         <div className="flex items-center gap-2 shrink-0 ml-3">
           {ev.dientes.length > 0 && (
             <div className="hidden sm:flex gap-1">
-              {ev.dientes.slice(0, 3).map(d => (
-                <Badge key={d} variant="secondary" className="text-xs px-1.5">
-                  {d}
+              {ev.dientes.slice(0, 3).map(toothNumber => (
+                <Badge key={toothNumber} variant="secondary" className="text-xs px-1.5">
+                  {toothNumber}
                 </Badge>
               ))}
               {ev.dientes.length > 3 && (
@@ -143,9 +143,9 @@ const EvolutionRow = ({ ev }: { ev: Evolution }) => {
           {ev.dientes.length > 0 && (
             <div className="flex flex-wrap gap-1">
               <span className="text-xs text-gray-500">{t('records.teeth')}</span>
-              {ev.dientes.map(d => (
-                <Badge key={d} variant="secondary" className="text-xs px-1.5">
-                  {d}
+              {ev.dientes.map(toothNumber => (
+                <Badge key={toothNumber} variant="secondary" className="text-xs px-1.5">
+                  {toothNumber}
                 </Badge>
               ))}
             </div>
@@ -350,10 +350,10 @@ const EvolutionsTab = ({ patientId, token }: EvolutionsTabProps) => {
     }
   }, [token, patientId])
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-    const form = e.currentTarget
+    const form = event.currentTarget
 
     const fd = new FormData(form)
 
@@ -363,7 +363,7 @@ const EvolutionsTab = ({ patientId, token }: EvolutionsTabProps) => {
       ? dienteStr
           .split(',')
           .map(Number)
-          .filter(n => !Number.isNaN(n))
+          .filter(toothNumber => !Number.isNaN(toothNumber))
       : []
 
     const importeRaw = fd.get('importe') as string
@@ -413,7 +413,7 @@ const EvolutionsTab = ({ patientId, token }: EvolutionsTabProps) => {
         <Button
           size="sm"
           variant={showForm ? 'outline' : 'default'}
-          onClick={() => setShowForm(s => !s)}
+          onClick={() => setShowForm(prev => !prev)}
           className="gap-2"
         >
           <Plus className="h-4 w-4" />

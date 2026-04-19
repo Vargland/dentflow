@@ -108,12 +108,12 @@ const MonthView = ({ current, timezone, appointments, onSlotClick, onApptClick }
 
   const days: Date[] = []
 
-  let d = start
+  let cursor = start
 
-  while (d <= end) {
-    days.push(d)
+  while (cursor <= end) {
+    days.push(cursor)
 
-    d = addDays(d, 1)
+    cursor = addDays(cursor, 1)
   }
 
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -130,9 +130,9 @@ const MonthView = ({ current, timezone, appointments, onSlotClick, onApptClick }
       </div>
       {/* Day cells */}
       <div className="grid grid-cols-7">
-        {days.map((day, i) => {
-          const dayAppts = appointments.filter(a =>
-            isSameDay(toZonedTime(parseISO(a.start_time), timezone), day)
+        {days.map((day, dayIndex) => {
+          const dayAppts = appointments.filter(appointment =>
+            isSameDay(toZonedTime(parseISO(appointment.start_time), timezone), day)
           )
 
           const isToday = isSameDay(day, new Date())
@@ -141,7 +141,7 @@ const MonthView = ({ current, timezone, appointments, onSlotClick, onApptClick }
 
           return (
             <div
-              key={i}
+              key={dayIndex}
               className={`min-h-[100px] border-b border-r border-gray-100 p-1.5 cursor-pointer hover:bg-gray-50 transition-colors ${
                 !isCurrentMonth ? 'bg-gray-50/50' : ''
               }`}
@@ -159,12 +159,12 @@ const MonthView = ({ current, timezone, appointments, onSlotClick, onApptClick }
                 {format(day, 'd')}
               </div>
               <div className="space-y-0.5">
-                {dayAppts.slice(0, 3).map(a => (
+                {dayAppts.slice(0, 3).map(appointment => (
                   <ApptChip
-                    key={a.id}
-                    appt={a}
+                    key={appointment.id}
+                    appt={appointment}
                     timezone={timezone}
-                    onClick={() => onApptClick(a)}
+                    onClick={() => onApptClick(appointment)}
                   />
                 ))}
                 {dayAppts.length > 3 && (
@@ -179,7 +179,7 @@ const MonthView = ({ current, timezone, appointments, onSlotClick, onApptClick }
   )
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
+const HOURS = Array.from({ length: 24 }, (_unused, index) => index)
 
 const TimeGrid = ({
   days,
@@ -199,27 +199,27 @@ const TimeGrid = ({
       {/* Hour labels */}
       <div className="w-14 shrink-0 border-r border-gray-200">
         <div className="h-10 border-b border-gray-100" />
-        {HOURS.map(h => (
+        {HOURS.map(hour => (
           <div
-            key={h}
+            key={hour}
             className="h-14 border-b border-gray-100 pr-2 flex items-start justify-end pt-0.5"
           >
-            <span className="text-xs text-gray-400">{h.toString().padStart(2, '0')}:00</span>
+            <span className="text-xs text-gray-400">{hour.toString().padStart(2, '0')}:00</span>
           </div>
         ))}
       </div>
 
       {/* Day columns */}
-      {days.map((day, di) => {
-        const dayAppts = appointments.filter(a =>
-          isSameDay(toZonedTime(parseISO(a.start_time), timezone), day)
+      {days.map((day, dayIndex) => {
+        const dayAppts = appointments.filter(appointment =>
+          isSameDay(toZonedTime(parseISO(appointment.start_time), timezone), day)
         )
 
         const isToday = isSameDay(day, new Date())
 
         return (
           <div
-            key={di}
+            key={dayIndex}
             className="flex-1 min-w-0 border-r border-gray-200 last:border-r-0 relative"
           >
             {/* Day header */}
@@ -232,14 +232,14 @@ const TimeGrid = ({
             </div>
 
             {/* Hour cells */}
-            {HOURS.map(h => (
+            {HOURS.map(hour => (
               <div
-                key={h}
+                key={hour}
                 className="h-14 border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors"
                 onClick={() => {
                   const start = new Date(day)
 
-                  start.setHours(h, 0, 0, 0)
+                  start.setHours(hour, 0, 0, 0)
 
                   onSlotClick(start)
                 }}
@@ -284,7 +284,7 @@ const TimeGrid = ({
 const WeekView = ({ current, timezone, appointments, onSlotClick, onApptClick }: ViewProps) => {
   const start = startOfWeek(current, { weekStartsOn: 1 })
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
+  const days = Array.from({ length: 7 }, (_unused, index) => addDays(start, index))
 
   return (
     <TimeGrid
@@ -440,17 +440,17 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         {/* View toggle */}
         <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {(['day', 'week', 'month'] as View[]).map(v => (
+          {(['day', 'week', 'month'] as View[]).map(viewOption => (
             <button
-              key={v}
-              onClick={() => setView(v)}
+              key={viewOption}
+              onClick={() => setView(viewOption)}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === v
+                view === viewOption
                   ? 'bg-blue-600 text-white'
                   : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
-              {t(`appointments.views.${v}`)}
+              {t(`appointments.views.${viewOption}`)}
             </button>
           ))}
         </div>

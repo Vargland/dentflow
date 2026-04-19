@@ -3,40 +3,36 @@
 import { useTransition } from 'react'
 import { toast } from 'sonner'
 
-import type { OdontogramProps } from '@/typing/components/odontogram.types'
+import type {
+  ActiveTool,
+  MarkType,
+  OdontogramProps,
+  Surface,
+  ToothState,
+} from '@/typing/components/odontogram.types'
 import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { saveOdontogram } from '@/services/odontogram.service'
-
-import ToothSVG from './tooth-svg'
-import type { ActiveTool, MarkType, Surface, ToothState } from './types'
-import { TOOL_COLORS } from './types'
 import {
+  HEALTHY_COLOR,
+  MARK,
+  MARK_TYPES,
   PERMANENT_LOWER,
   PERMANENT_UPPER,
   TEMPORARY_LOWER,
   TEMPORARY_UPPER,
-  useOdontogramState,
-} from './use-odontogram-state'
+  TOOL_COLORS,
+} from '@/constants/odontogram'
+import { saveOdontogram } from '@/services/odontogram.service'
 
-// ── Tool list ─────────────────────────────────────────────────────────────────
-
-/** All available clinical tools (order determines toolbar display). */
-const TOOL_KEYS: MarkType[] = [
-  'caries',
-  'restauracion',
-  'corona',
-  'extraccion',
-  'endodoncia',
-  'ausente',
-]
+import ToothSVG from './tooth-svg'
+import { useOdontogramState } from './use-odontogram-state'
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 interface ToothRowProps {
   /** FDI numbers to render in order. */
-  teeth: number[]
+  teeth: readonly number[]
   /** Full state map keyed by FDI number. */
   stateMap: Record<number, ToothState>
   /** Whether the row belongs to the upper arch (number label above). */
@@ -130,9 +126,9 @@ const SectionLabel = ({ label }: SectionLabelProps) => (
  *
  * Features:
  * - 5 individually clickable surfaces per tooth (M, D, V, P, O)
- * - Whole-tooth marks: corona, extraccion, endodoncia, ausente
+ * - Whole-tooth marks: crown, extraction, rootcanal, extracted
  * - Permanent and temporary dentition tabs
- * - Metrics summary (caries, restorations, absent, healthy)
+ * - Metrics summary (cavities, fillings, missing, healthy)
  * - LocalStorage persistence + API save
  *
  * @param patientId   - UUID of the patient (also used as localStorage key).
@@ -175,15 +171,15 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
 
   const markedSurfaces = selectedState
     ? (Object.entries(selectedState.surfaces) as Array<[Surface, MarkType | null]>)
-        .filter(([, v]) => v !== null)
-        .map(([k, v]) => `${k}: ${v}`)
+        .filter(([, mark]) => mark !== null)
+        .map(([surface, mark]) => `${surface}: ${t(`odontogram.tools.${mark as MarkType}`)}`)
     : []
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-4">
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        {TOOL_KEYS.map(tool => (
+        {MARK_TYPES.map(tool => (
           <button
             key={tool}
             type="button"
@@ -214,19 +210,19 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
 
       {/* ── Dentition tabs ──────────────────────────────────────────────────── */}
       <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
-        {(['permanent', 'temporary'] as const).map(d => (
+        {(['permanent', 'temporary'] as const).map(dentitionOption => (
           <button
-            key={d}
+            key={dentitionOption}
             type="button"
-            onClick={() => setDentition(d)}
+            onClick={() => setDentition(dentitionOption)}
             className={cn(
               'text-xs font-medium px-3 py-1 rounded-t transition-colors',
-              dentition === d
+              dentition === dentitionOption
                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-b-0 border-gray-200 dark:border-gray-700'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             )}
           >
-            {t(`odontogram.${d}`)}
+            {t(`odontogram.${dentitionOption}`)}
           </button>
         ))}
       </div>
@@ -281,7 +277,7 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
             <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
               {t('odontogram.legend')}
             </p>
-            {TOOL_KEYS.map(tool => (
+            {MARK_TYPES.map(tool => (
               <div key={tool} className="flex items-center gap-1.5">
                 <span
                   className="h-2.5 w-2.5 rounded-sm shrink-0"
@@ -304,15 +300,15 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
                 <p className="text-[10px] text-gray-700 dark:text-gray-300">
                   {t('odontogram.toothMark')}:{' '}
                   <span style={{ color: TOOL_COLORS[selectedState.mark] }}>
-                    {selectedState.mark}
+                    {t(`odontogram.tools.${selectedState.mark}`)}
                   </span>
                 </p>
               )}
               {markedSurfaces.length > 0 ? (
                 <ul className="space-y-0.5">
-                  {markedSurfaces.map(s => (
-                    <li key={s} className="text-[10px] text-gray-600 dark:text-gray-300">
-                      {s}
+                  {markedSurfaces.map(surfaceLabel => (
+                    <li key={surfaceLabel} className="text-[10px] text-gray-600 dark:text-gray-300">
+                      {surfaceLabel}
                     </li>
                   ))}
                 </ul>
@@ -332,14 +328,10 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
       <div className="flex gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
         {(
           [
-            { key: 'caries', value: metrics.caries, color: TOOL_COLORS.caries },
-            {
-              key: 'restauraciones',
-              value: metrics.restauraciones,
-              color: TOOL_COLORS.restauracion,
-            },
-            { key: 'ausentes', value: metrics.ausentes, color: TOOL_COLORS.ausente },
-            { key: 'sanos', value: metrics.sanos, color: '#16a34a' },
+            { key: 'cavities', value: metrics.cavities, color: TOOL_COLORS[MARK.CAVITY] },
+            { key: 'fillings', value: metrics.fillings, color: TOOL_COLORS[MARK.FILLED] },
+            { key: 'missing', value: metrics.missing, color: TOOL_COLORS[MARK.EXTRACTED] },
+            { key: 'healthy', value: metrics.healthy, color: HEALTHY_COLOR },
           ] as const
         ).map(({ key, value, color }) => (
           <div key={key} className="flex items-center gap-1.5">

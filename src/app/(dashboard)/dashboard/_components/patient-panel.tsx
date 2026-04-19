@@ -63,9 +63,9 @@ const calcAge = (dob: string): number => {
 
   let age = today.getFullYear() - birth.getFullYear()
 
-  const m = today.getMonth() - birth.getMonth()
+  const monthDiff = today.getMonth() - birth.getMonth()
 
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
 
   return age
 }
@@ -202,16 +202,16 @@ const PatientPanel = ({
       setLoading(true)
 
       try {
-        const [p, evs] = await Promise.all([
+        const [loadedPatient, loadedEvolutions] = await Promise.all([
           getPatient(token, patientId),
           getEvolutions(token, patientId),
         ])
 
         if (cancelled) return
 
-        setPatient(p)
+        setPatient(loadedPatient)
 
-        setEvolutions(evs)
+        setEvolutions(loadedEvolutions)
 
         // Autofocus textarea after patient loads
         setTimeout(() => textareaRef.current?.focus(), 100)
@@ -242,11 +242,11 @@ const PatientPanel = ({
   const getNextAppointment = (): Appointment | null => {
     if (!appointment) return null
 
-    const currentIndex = appointments.findIndex(a => a.id === appointment.id)
+    const currentIndex = appointments.findIndex(item => item.id === appointment.id)
 
     const remaining = appointments.slice(currentIndex + 1)
 
-    return remaining.find(a => a.status === 'scheduled') ?? null
+    return remaining.find(item => item.status === 'scheduled') ?? null
   }
 
   /**
@@ -260,8 +260,8 @@ const PatientPanel = ({
       try {
         const teeth = evolutionTeeth
           .split(',')
-          .map(s => parseInt(s.trim(), 10))
-          .filter(n => !isNaN(n) && n > 0)
+          .map(part => parseInt(part.trim(), 10))
+          .filter(toothNumber => !isNaN(toothNumber) && toothNumber > 0)
 
         const importeNum = evolutionImporte !== '' ? parseFloat(evolutionImporte) : undefined
 
@@ -397,7 +397,9 @@ const PatientPanel = ({
         input: { descripcion: editingEvText.trim() },
       })
 
-      setEvolutions(prev => prev.map(e => (e.id === updated.id ? updated : e)))
+      setEvolutions(prev =>
+        prev.map(evolution => (evolution.id === updated.id ? updated : evolution))
+      )
 
       setEditingEvId(null)
 
@@ -411,13 +413,13 @@ const PatientPanel = ({
 
   // ── Keyboard shortcut: Cmd/Ctrl + Enter → finish appointment ────────────────
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const isMacPlatform = navigator.platform.toUpperCase().includes('MAC')
 
-      const modifier = isMacPlatform ? e.metaKey : e.ctrlKey
+      const modifier = isMacPlatform ? event.metaKey : event.ctrlKey
 
-      if (modifier && e.key === 'Enter' && !isUpdating && appointment?.status === 'scheduled') {
-        e.preventDefault()
+      if (modifier && event.key === 'Enter' && !isUpdating && appointment?.status === 'scheduled') {
+        event.preventDefault()
 
         handleFinishAppointment()
       }
@@ -437,20 +439,20 @@ const PatientPanel = ({
     setCancelReason('')
   }
 
-  const handleTogglePaid = async (ev: Evolution) => {
-    if (!patient || togglingPaidId === ev.id) return
+  const handleTogglePaid = async (evolution: Evolution) => {
+    if (!patient || togglingPaidId === evolution.id) return
 
-    setTogglingPaidId(ev.id)
+    setTogglingPaidId(evolution.id)
 
     try {
       const updated = await updateEvolution({
         token,
         patientId: patient.id,
-        evolutionId: ev.id,
-        input: { pagado: !ev.pagado },
+        evolutionId: evolution.id,
+        input: { pagado: !evolution.pagado },
       })
 
-      setEvolutions(prev => prev.map(e => (e.id === updated.id ? updated : e)))
+      setEvolutions(prev => prev.map(current => (current.id === updated.id ? updated : current)))
     } catch {
       toast.error(t('appointmentDetail.evolutionError'))
     } finally {
@@ -554,11 +556,11 @@ const PatientPanel = ({
   /**
    * Formats a number as a localised currency string.
    *
-   * @param n - The numeric value.
+   * @param amount - The numeric value.
    * @returns Formatted currency string.
    */
-  const formatCurrency = (n: number) =>
-    n.toLocaleString(i18n.language === 'es' ? 'es-AR' : 'en-US', {
+  const formatCurrency = (amount: number) =>
+    amount.toLocaleString(i18n.language === 'es' ? 'es-AR' : 'en-US', {
       style: 'currency',
       currency: i18n.language === 'es' ? 'ARS' : 'USD',
       minimumFractionDigits: 0,
@@ -658,7 +660,7 @@ const PatientPanel = ({
           <textarea
             ref={textareaRef}
             value={evolutionText}
-            onChange={e => setEvolutionText(e.target.value)}
+            onChange={event => setEvolutionText(event.target.value)}
             placeholder={t('dashboard.evolutionPlaceholder')}
             rows={7}
             disabled={isAlreadyDone}
@@ -680,7 +682,7 @@ const PatientPanel = ({
             <input
               type="text"
               value={evolutionTeeth}
-              onChange={e => setEvolutionTeeth(e.target.value)}
+              onChange={event => setEvolutionTeeth(event.target.value)}
               placeholder={t('records.teethPlaceholder')}
               title={t('records.teethHint')}
               disabled={isAlreadyDone}
@@ -697,7 +699,7 @@ const PatientPanel = ({
                 min="0"
                 step="0.01"
                 value={evolutionImporte}
-                onChange={e => setEvolutionImporte(e.target.value)}
+                onChange={event => setEvolutionImporte(event.target.value)}
                 placeholder={t('records.amountPlaceholder')}
                 disabled={isAlreadyDone}
                 className="w-28 rounded-md border border-gray-150 dark:border-gray-750 pl-6 pr-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition-colors disabled:opacity-50"
@@ -706,7 +708,7 @@ const PatientPanel = ({
             <button
               type="button"
               disabled={isAlreadyDone}
-              onClick={() => setEvolutionPagado(v => !v)}
+              onClick={() => setEvolutionPagado(prev => !prev)}
               className={cn(
                 'flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border transition-colors shrink-0',
                 isAlreadyDone && 'opacity-50 cursor-not-allowed',
@@ -736,7 +738,7 @@ const PatientPanel = ({
         <div className="px-5 pb-4">
           <button
             type="button"
-            onClick={() => setShowHistory(v => !v)}
+            onClick={() => setShowHistory(prev => !prev)}
             className="w-full flex items-center justify-between py-2 text-[10px] font-semibold uppercase tracking-widest text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors border-t border-gray-100 dark:border-gray-800/60"
           >
             <span>{t('dashboard.lastTreatments')}</span>
@@ -761,7 +763,7 @@ const PatientPanel = ({
                 <div className="flex items-center justify-between pb-0.5">
                   <button
                     type="button"
-                    onClick={() => setEvolutionSortAsc(v => !v)}
+                    onClick={() => setEvolutionSortAsc(prev => !prev)}
                     className="flex items-center gap-1 text-[10px] text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"
                     title={evolutionSortAsc ? t('dashboard.sortNewest') : t('dashboard.sortOldest')}
                   >
@@ -845,7 +847,7 @@ const PatientPanel = ({
                         <div className="space-y-1.5 pt-0.5">
                           <textarea
                             value={editingEvText}
-                            onChange={e => setEditingEvText(e.target.value)}
+                            onChange={event => setEditingEvText(event.target.value)}
                             rows={3}
                             autoFocus
                             className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
@@ -877,12 +879,12 @@ const PatientPanel = ({
 
                       {ev.dientes.length > 0 && !isEditing && (
                         <div className="flex flex-wrap gap-1 pt-0.5">
-                          {ev.dientes.map(d => (
+                          {ev.dientes.map(toothNumber => (
                             <span
-                              key={d}
+                              key={toothNumber}
                               className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
                             >
-                              {d}
+                              {toothNumber}
                             </span>
                           ))}
                         </div>
@@ -1040,7 +1042,7 @@ const PatientPanel = ({
               </label>
               <textarea
                 value={cancelReason}
-                onChange={e => setCancelReason(e.target.value)}
+                onChange={event => setCancelReason(event.target.value)}
                 placeholder={t('dashboard.cancelReasonPlaceholder')}
                 rows={2}
                 className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
@@ -1092,12 +1094,12 @@ const PatientPanel = ({
                   </p>
                   {ev.dientes.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {ev.dientes.map(d => (
+                      {ev.dientes.map(toothNumber => (
                         <span
-                          key={d}
+                          key={toothNumber}
                           className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-400 dark:text-blue-500 px-1.5 py-0.5 rounded font-mono"
                         >
-                          {d}
+                          {toothNumber}
                         </span>
                       ))}
                     </div>

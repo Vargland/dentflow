@@ -43,7 +43,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   const [selectedId, setSelectedId] = useState<string | null>(
     // Auto-select the first scheduled appointment of today, if any
-    initialAppointments.find(a => a.status === 'scheduled')?.id ?? null
+    initialAppointments.find(appointment => appointment.status === 'scheduled')?.id ?? null
   )
 
   const [showNewForm, setShowNewForm] = useState(false)
@@ -54,11 +54,11 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   // Date navigation — start at today, shift ±1 day with arrows
   const [viewDate, setViewDate] = useState<Date>(() => {
-    const d = new Date()
+    const today = new Date()
 
-    d.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
 
-    return d
+    return today
   })
 
   // Odontogram modal state
@@ -68,7 +68,8 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
 
   const [odontogramLoading, setOdontogramLoading] = useState(false)
 
-  const selectedAppointment = appointments.find(a => a.id === selectedId) ?? null
+  const selectedAppointment =
+    appointments.find(appointment => appointment.id === selectedId) ?? null
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -77,7 +78,9 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
    * If a nextId is provided, automatically advance to that appointment.
    */
   const handleAppointmentUpdated = (id: string, status: string, nextId?: string | null) => {
-    setAppointments(prev => prev.map(a => (a.id === id ? { ...a, status } : a)))
+    setAppointments(prev =>
+      prev.map(appointment => (appointment.id === id ? { ...appointment, status } : appointment))
+    )
 
     if (nextId) {
       setSelectedId(nextId)
@@ -107,12 +110,13 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
       const fresh = await listAppointments(token, startOfDay.toISOString(), endOfDay.toISOString())
 
       const sorted = [...fresh].sort(
-        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+        (first, second) =>
+          new Date(first.start_time).getTime() - new Date(second.start_time).getTime()
       )
 
       setAppointments(sorted)
 
-      setSelectedId(sorted.find(a => a.status === 'scheduled')?.id ?? null)
+      setSelectedId(sorted.find(appointment => appointment.status === 'scheduled')?.id ?? null)
     } catch {
       // Keep existing list if refresh fails
     }

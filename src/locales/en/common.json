@@ -128,19 +128,20 @@
     "tooth": "Tooth {{number}}",
     "toothMark": "Mark",
     "toothHealthy": "Healthy",
+    "ariaHealthy": "healthy",
     "metrics": {
-      "caries": "Caries",
-      "restauraciones": "Restorations",
-      "ausentes": "Absent",
-      "sanos": "Healthy"
+      "cavities": "Cavities",
+      "fillings": "Fillings",
+      "missing": "Missing",
+      "healthy": "Healthy"
     },
     "tools": {
-      "caries": "Caries",
-      "restauracion": "Restoration",
-      "corona": "Crown",
-      "extraccion": "Extraction",
-      "endodoncia": "Root canal",
-      "ausente": "Absent"
+      "cavity": "Cavity",
+      "filled": "Filling",
+      "crown": "Crown",
+      "extraction": "Extraction",
+      "rootcanal": "Root canal",
+      "extracted": "Missing"
     }
   },
   "records": {

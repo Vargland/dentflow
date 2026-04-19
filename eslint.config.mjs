@@ -34,6 +34,14 @@ const eslintConfig = defineConfig([
       'max-params': ['error', { max: 3 }],
       'no-underscore-dangle': ['error', { allow: ['_chatlio'] }],
       'object-curly-spacing': ['error', 'always'],
+      'id-length': [
+        'error',
+        {
+          min: 3,
+          exceptions: ['i', 'j', 'id', 'to', 'fd', 'cn', 'ev'],
+          properties: 'never',
+        },
+      ],
 
       // ── TypeScript ────────────────────────────────────────────────────────
       '@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],

@@ -83,11 +83,11 @@ export const AppointmentForm = ({
   const initialEndLocal = (() => {
     if (appointment) return toZonedTime(parseISO(appointment.end_time), timezone)
 
-    const d = new Date(initialLocal)
+    const endLocal = new Date(initialLocal)
 
-    d.setMinutes(d.getMinutes() + 30)
+    endLocal.setMinutes(endLocal.getMinutes() + 30)
 
-    return d
+    return endLocal
   })()
 
   const [date, setDate] = useState(toDateInput(initialLocal))
@@ -209,7 +209,7 @@ export const AppointmentForm = ({
             <Input
               id="appt-title"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={event => setTitle(event.target.value)}
               placeholder={t('appointments.form.appointmentTitlePlaceholder')}
             />
           </div>
@@ -219,7 +219,7 @@ export const AppointmentForm = ({
             <Label>{t('appointments.form.patient')}</Label>
             <Input
               value={patientSearch}
-              onChange={e => setPatientSearch(e.target.value)}
+              onChange={event => setPatientSearch(event.target.value)}
               placeholder={t('appointments.form.patientPlaceholder')}
             />
             {patients.length > 0 && (
@@ -235,18 +235,18 @@ export const AppointmentForm = ({
                 >
                   {t('appointments.form.noPatient')}
                 </button>
-                {patients.map(p => (
+                {patients.map(patient => (
                   <button
-                    key={p.id}
+                    key={patient.id}
                     type="button"
                     className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50"
                     onClick={() => {
-                      setPatientId(p.id)
+                      setPatientId(patient.id)
 
-                      setPatientSearch(`${p.nombre} ${p.apellido}`)
+                      setPatientSearch(`${patient.nombre} ${patient.apellido}`)
                     }}
                   >
-                    {p.nombre} {p.apellido}
+                    {patient.nombre} {patient.apellido}
                   </button>
                 ))}
               </div>
@@ -260,7 +260,7 @@ export const AppointmentForm = ({
               id="appt-date"
               type="date"
               value={date}
-              onChange={e => setDate(e.target.value)}
+              onChange={event => setDate(event.target.value)}
             />
           </div>
 
@@ -272,7 +272,7 @@ export const AppointmentForm = ({
                 id="appt-start"
                 type="time"
                 value={startTime}
-                onChange={e => setStartTime(e.target.value)}
+                onChange={event => setStartTime(event.target.value)}
               />
             </div>
             <div className="space-y-1.5">
@@ -281,7 +281,7 @@ export const AppointmentForm = ({
                 id="appt-end"
                 type="time"
                 value={endTime}
-                onChange={e => setEndTime(e.target.value)}
+                onChange={event => setEndTime(event.target.value)}
               />
             </div>
           </div>
@@ -289,7 +289,7 @@ export const AppointmentForm = ({
           {/* Status */}
           <div className="space-y-1.5">
             <Label>{t('appointments.form.status')}</Label>
-            <Select value={status} onValueChange={v => setStatus(v ?? 'scheduled')}>
+            <Select value={status} onValueChange={value => setStatus(value ?? 'scheduled')}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -313,7 +313,7 @@ export const AppointmentForm = ({
             <Textarea
               id="appt-notes"
               value={notes}
-              onChange={e => setNotes(e.target.value)}
+              onChange={event => setNotes(event.target.value)}
               placeholder={t('appointments.form.notesPlaceholder')}
               rows={2}
             />
@@ -324,7 +324,7 @@ export const AppointmentForm = ({
             <input
               type="checkbox"
               checked={allowOverlap}
-              onChange={e => setAllowOverlap(e.target.checked)}
+              onChange={event => setAllowOverlap(event.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-orange-500 accent-orange-500"
             />
             <span className="text-sm font-medium text-orange-600">

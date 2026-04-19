@@ -94,7 +94,7 @@ const EvolutionCard = ({
         <div className="space-y-2">
           <Textarea
             value={editText}
-            onChange={e => onEditChange(e.target.value)}
+            onChange={event => onEditChange(event.target.value)}
             rows={4}
             autoFocus
             className="text-sm"
@@ -135,9 +135,9 @@ const EvolutionCard = ({
       {ev.dientes.length > 0 && !isEditing && (
         <div className="flex flex-wrap gap-1">
           <span className="text-xs text-gray-500 dark:text-gray-400">{t('records.teeth')}</span>
-          {ev.dientes.map(d => (
-            <Badge key={d} variant="secondary" className="text-xs px-1.5">
-              {d}
+          {ev.dientes.map(toothNumber => (
+            <Badge key={toothNumber} variant="secondary" className="text-xs px-1.5">
+              {toothNumber}
             </Badge>
           ))}
         </div>
@@ -193,10 +193,10 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-    const form = e.currentTarget
+    const form = event.currentTarget
 
     const fd = new FormData(form)
 
@@ -206,7 +206,7 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
       ? dienteStr
           .split(',')
           .map(Number)
-          .filter(n => !Number.isNaN(n))
+          .filter(toothNumber => !Number.isNaN(toothNumber))
       : []
 
     const importeRaw = fd.get('importe') as string
@@ -263,7 +263,9 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
         input: { descripcion: editingEvText.trim() },
       })
 
-      setEvolutions(prev => prev.map(e => (e.id === updated.id ? updated : e)))
+      setEvolutions(prev =>
+        prev.map(evolution => (evolution.id === updated.id ? updated : evolution))
+      )
 
       setEditingEvId(null)
 
@@ -377,9 +379,9 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
                   )}
                   {ev.dientes.length > 0 && (
                     <div className="hidden sm:flex gap-1">
-                      {ev.dientes.slice(0, 3).map(d => (
-                        <Badge key={d} variant="secondary" className="text-xs px-1.5">
-                          {d}
+                      {ev.dientes.slice(0, 3).map(toothNumber => (
+                        <Badge key={toothNumber} variant="secondary" className="text-xs px-1.5">
+                          {toothNumber}
                         </Badge>
                       ))}
                       {ev.dientes.length > 3 && (

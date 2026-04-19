@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import type { OdontogramState } from '@/typing/services/odontogram.interface'
-
 import type {
   ActiveTool,
   DentitionType,
@@ -12,32 +10,9 @@ import type {
   OdontogramMetrics,
   Surface,
   ToothState,
-} from './types'
-
-// ── FDI tooth layouts ──────────────────────────────────────────────────────────
-
-/** Upper permanent teeth (right → left, FDI). */
-export const PERMANENT_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
-
-/** Lower permanent teeth (right → left, FDI). */
-export const PERMANENT_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
-
-/** Upper temporary teeth (right → left, FDI). */
-export const TEMPORARY_UPPER = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]
-
-/** Lower temporary teeth (right → left, FDI). */
-export const TEMPORARY_LOWER = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]
-
-/** All FDI tooth numbers tracked by the odontogram. */
-export const ALL_TEETH = [
-  ...PERMANENT_UPPER,
-  ...PERMANENT_LOWER,
-  ...TEMPORARY_UPPER,
-  ...TEMPORARY_LOWER,
-]
-
-/** Whole-tooth tools that annotate the entire tooth rather than individual surfaces. */
-const WHOLE_TOOTH_TOOLS: MarkType[] = ['corona', 'extraccion', 'endodoncia', 'ausente']
+} from '@/typing/components/odontogram.types'
+import type { OdontogramState } from '@/typing/services/odontogram.interface'
+import { ALL_TEETH, MARK, WHOLE_TOOTH_MARKS } from '@/constants/odontogram'
 
 /** Build a blank tooth state. */
 const blankTooth = (): ToothState => ({
@@ -46,26 +21,28 @@ const blankTooth = (): ToothState => ({
 })
 
 /**
- * Maps the legacy API surface state string to the v2 MarkType or null.
- * Only caries/cavity and filled/restauracion have equivalents; other states are ignored.
+ * Maps a surface state string from the API to the UI MarkType or null.
+ * The UI now uses the same term set as the API; this helper just validates
+ * and narrows the type, folding unknown states to `null`.
  *
- * @param s - Legacy surface state string from the API.
+ * @param legacyState - Surface state string from the API.
  * @returns Corresponding MarkType or null.
  */
-const legacySurfaceToMark = (s: string | undefined): MarkType | null => {
-  if (!s) return null
+const legacySurfaceToMark = (legacyState: string | undefined): MarkType | null => {
+  if (!legacyState) return null
 
-  if (s === 'cavity') return 'caries'
+  switch (legacyState) {
+    case MARK.CAVITY:
+    case MARK.FILLED:
+    case MARK.CROWN:
+    case MARK.EXTRACTION:
+    case MARK.EXTRACTED:
+    case MARK.ROOTCANAL:
+      return legacyState
 
-  if (s === 'filled') return 'restauracion'
-
-  if (s === 'crown') return 'corona'
-
-  if (s === 'extraction' || s === 'extracted') return 'extraccion'
-
-  if (s === 'rootcanal') return 'endodoncia'
-
-  return null
+    default:
+      return null
+  }
 }
 
 /**
@@ -148,41 +125,42 @@ const loadPersisted = (patientId: string): OdontogramData | null => {
  * @returns Computed metric counters.
  */
 const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
-  let caries = 0
+  let cavities = 0
 
-  let restauraciones = 0
+  let fillings = 0
 
-  let ausentes = 0
+  let missing = 0
 
-  let sanos = 0
+  let healthy = 0
 
   for (const fdi of ALL_TEETH) {
     const tooth = state[fdi]
 
     if (!tooth) {
-      sanos++
+      healthy++
 
       continue
     }
 
-    if (tooth.mark === 'ausente') {
-      ausentes++
+    if (tooth.mark === MARK.EXTRACTED) {
+      missing++
 
       continue
     }
 
-    const hasCaries = Object.values(tooth.surfaces).some(v => v === 'caries')
+    const hasCavity = Object.values(tooth.surfaces).some(mark => mark === MARK.CAVITY)
 
-    const hasRestaur = Object.values(tooth.surfaces).some(v => v === 'restauracion')
+    const hasFilling = Object.values(tooth.surfaces).some(mark => mark === MARK.FILLED)
 
-    const hasAnyMark = tooth.mark !== null || Object.values(tooth.surfaces).some(v => v !== null)
+    const hasAnyMark =
+      tooth.mark !== null || Object.values(tooth.surfaces).some(mark => mark !== null)
 
-    if (hasCaries) caries++
-    else if (hasRestaur) restauraciones++
-    else if (!hasAnyMark) sanos++
+    if (hasCavity) cavities++
+    else if (hasFilling) fillings++
+    else if (!hasAnyMark) healthy++
   }
 
-  return { caries, restauraciones, ausentes, sanos }
+  return { cavities, fillings, missing, healthy }
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
@@ -204,7 +182,7 @@ export interface UseOdontogramStateReturn {
   /** Switch the active tool. */
   setActiveTool: (tool: ActiveTool) => void
   /** Switch dentition. */
-  setDentition: (d: DentitionType) => void
+  setDentition: (dentitionType: DentitionType) => void
   /** Handle a surface click on a tooth. */
   handleSurfaceClick: (fdi: number, surface: Surface) => void
   /** Handle a whole-tooth click for whole-tooth tools. */
@@ -232,7 +210,7 @@ export const useOdontogramState = (
     return persisted ?? buildInitialState(initialData)
   })
 
-  const [activeTool, setActiveTool] = useState<ActiveTool>('caries')
+  const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
 
   const [dentition, setDentition] = useState<DentitionType>('permanent')
 
@@ -252,7 +230,7 @@ export const useOdontogramState = (
       setTeeth(prev => {
         const current = prev[fdi] ?? blankTooth()
 
-        if (WHOLE_TOOTH_TOOLS.includes(activeTool)) {
+        if (WHOLE_TOOTH_MARKS.includes(activeTool)) {
           // Whole-tooth tool applied via surface click → toggle on the tooth
           const newMark = current.mark === activeTool ? null : activeTool
 
