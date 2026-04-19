@@ -129,18 +129,18 @@
     "toothMark": "Marca",
     "toothHealthy": "Sano",
     "metrics": {
-      "caries": "Caries",
-      "restauraciones": "Restauraciones",
-      "ausentes": "Ausentes",
-      "sanos": "Sanos"
+      "cavities": "Caries",
+      "fillings": "Restauraciones",
+      "missing": "Ausentes",
+      "healthy": "Sanos"
     },
     "tools": {
-      "caries": "Caries",
-      "restauracion": "Restauracion",
-      "corona": "Corona",
-      "extraccion": "Extraccion",
-      "endodoncia": "Endodoncia",
-      "ausente": "Ausente"
+      "cavity": "Caries",
+      "filled": "Restauracion",
+      "crown": "Corona",
+      "extraction": "Extraccion",
+      "rootcanal": "Endodoncia",
+      "extracted": "Ausente"
     }
   },
   "records": {

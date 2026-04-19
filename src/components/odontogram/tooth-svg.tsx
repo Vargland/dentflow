@@ -1,7 +1,7 @@
 'use client'
 
-import type { MarkType, Surface, ToothState } from './types'
-import { TOOL_COLORS } from './types'
+import type { MarkType, Surface, ToothState } from '@/typing/components/odontogram.types'
+import { TOOL_COLORS } from '@/constants/odontogram'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -151,39 +151,39 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
       />
 
       {/* ── Whole-tooth overlays ─────────────────────────────────────────────── */}
-      {mark === 'corona' && (
+      {mark === 'crown' && (
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={SIZE / 2 - 2}
           fill="none"
-          stroke={TOOL_COLORS.corona}
+          stroke={TOOL_COLORS.crown}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'extraccion' && (
-        <g stroke={TOOL_COLORS.extraccion} strokeWidth="2.5" pointerEvents="none">
+      {mark === 'extraction' && (
+        <g stroke={TOOL_COLORS.extraction} strokeWidth="2.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
       )}
 
-      {mark === 'endodoncia' && (
+      {mark === 'rootcanal' && (
         <line
           x1={SIZE / 2}
           y1="2"
           x2={SIZE / 2}
           y2={SIZE - 2}
-          stroke={TOOL_COLORS.endodoncia}
+          stroke={TOOL_COLORS.rootcanal}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'ausente' && (
-        <g stroke={TOOL_COLORS.ausente} strokeWidth="1.5" pointerEvents="none">
+      {mark === 'extracted' && (
+        <g stroke={TOOL_COLORS.extracted} strokeWidth="1.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
