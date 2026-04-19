@@ -34,6 +34,15 @@ const eslintConfig = defineConfig([
       'max-params': ['error', { max: 3 }],
       'no-underscore-dangle': ['error', { allow: ['_chatlio'] }],
       'object-curly-spacing': ['error', 'always'],
+      // ── Architecture: no Server Actions. Use Route Handlers in src/app/api/*.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ExpressionStatement[directive="use server"]',
+          message:
+            'Server Actions are forbidden. Next.js must stay pure frontend — use a Route Handler under src/app/api/ instead.',
+        },
+      ],
       'id-length': [
         'error',
         {
@@ -82,7 +91,6 @@ const eslintConfig = defineConfig([
             [
               '^@/typing',
               '^@/lib',
-              '^@/actions',
               '^@/components/ui',
               '^@/components',
               '^@/',
