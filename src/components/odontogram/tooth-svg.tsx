@@ -1,7 +1,8 @@
 'use client'
 
 import type { MarkType, Surface, ToothState } from '@/typing/components/odontogram.types'
-import { TOOL_COLORS } from '@/constants/odontogram'
+import { useTranslation } from '@/lib/i18n/client'
+import { MARK, TOOL_COLORS } from '@/constants/odontogram'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -59,21 +60,25 @@ export interface ToothSVGProps {
  * @param onSurfaceClick - Callback fired with the clicked surface identifier.
  */
 const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
+  const { t } = useTranslation()
+
   const { surfaces, mark } = state
 
   /** Describe the tooth state for screen readers. */
   const ariaDescription = (): string => {
     const parts: string[] = []
 
-    if (mark) parts.push(mark)
+    if (mark) parts.push(t(`odontogram.tools.${mark}`))
 
     const surfaceMarks = (Object.entries(surfaces) as Array<[Surface, MarkType | null]>)
       .filter(([, surfaceMark]) => surfaceMark !== null)
-      .map(([surface, surfaceMark]) => `${surface}:${surfaceMark}`)
+      .map(
+        ([surface, surfaceMark]) => `${surface}:${t(`odontogram.tools.${surfaceMark as MarkType}`)}`
+      )
 
     parts.push(...surfaceMarks)
 
-    return parts.length ? parts.join(', ') : 'sano'
+    return parts.length ? parts.join(', ') : t('odontogram.ariaHealthy')
   }
 
   const sharedPathProps = {
@@ -151,39 +156,39 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
       />
 
       {/* ── Whole-tooth overlays ─────────────────────────────────────────────── */}
-      {mark === 'crown' && (
+      {mark === MARK.CROWN && (
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={SIZE / 2 - 2}
           fill="none"
-          stroke={TOOL_COLORS.crown}
+          stroke={TOOL_COLORS[MARK.CROWN]}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'extraction' && (
-        <g stroke={TOOL_COLORS.extraction} strokeWidth="2.5" pointerEvents="none">
+      {mark === MARK.EXTRACTION && (
+        <g stroke={TOOL_COLORS[MARK.EXTRACTION]} strokeWidth="2.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
       )}
 
-      {mark === 'rootcanal' && (
+      {mark === MARK.ROOTCANAL && (
         <line
           x1={SIZE / 2}
           y1="2"
           x2={SIZE / 2}
           y2={SIZE - 2}
-          stroke={TOOL_COLORS.rootcanal}
+          stroke={TOOL_COLORS[MARK.ROOTCANAL]}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
-      {mark === 'extracted' && (
-        <g stroke={TOOL_COLORS.extracted} strokeWidth="1.5" pointerEvents="none">
+      {mark === MARK.EXTRACTED && (
+        <g stroke={TOOL_COLORS[MARK.EXTRACTED]} strokeWidth="1.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>

@@ -19,32 +19,46 @@ import type { MarkType } from '@/typing/components/odontogram.types'
 
 // ── Clinical marks ────────────────────────────────────────────────────────────
 
+/**
+ * Canonical clinical mark identifiers (dental jargon → API contract).
+ * Use `MARK.CAVITY` instead of the bare string `'cavity'` anywhere in the app
+ * so typos become compile-time errors and there is a single source of truth.
+ */
+export const MARK = {
+  CAVITY: 'cavity',
+  FILLED: 'filled',
+  CROWN: 'crown',
+  EXTRACTION: 'extraction',
+  ROOTCANAL: 'rootcanal',
+  EXTRACTED: 'extracted',
+} as const satisfies Record<string, MarkType>
+
 /** All clinical mark tools available in the odontogram, in toolbar order. */
 export const MARK_TYPES: readonly MarkType[] = [
-  'cavity',
-  'filled',
-  'crown',
-  'extraction',
-  'rootcanal',
-  'extracted',
+  MARK.CAVITY,
+  MARK.FILLED,
+  MARK.CROWN,
+  MARK.EXTRACTION,
+  MARK.ROOTCANAL,
+  MARK.EXTRACTED,
 ] as const
 
 /** Marks that annotate the entire tooth rather than a single surface. */
 export const WHOLE_TOOTH_MARKS: readonly MarkType[] = [
-  'crown',
-  'extraction',
-  'rootcanal',
-  'extracted',
+  MARK.CROWN,
+  MARK.EXTRACTION,
+  MARK.ROOTCANAL,
+  MARK.EXTRACTED,
 ] as const
 
 /** Colour assigned to each clinical mark tool (hex, used for SVG fills). */
 export const TOOL_COLORS: Record<MarkType, string> = {
-  cavity: '#E24B4A',
-  filled: '#185FA5',
-  crown: '#BA7517',
-  extraction: '#5F5E5A',
-  rootcanal: '#639922',
-  extracted: '#B4B2A9',
+  [MARK.CAVITY]: '#E24B4A',
+  [MARK.FILLED]: '#185FA5',
+  [MARK.CROWN]: '#BA7517',
+  [MARK.EXTRACTION]: '#5F5E5A',
+  [MARK.ROOTCANAL]: '#639922',
+  [MARK.EXTRACTED]: '#B4B2A9',
 }
 
 // ── Metrics colours ───────────────────────────────────────────────────────────

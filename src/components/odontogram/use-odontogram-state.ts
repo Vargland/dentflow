@@ -12,7 +12,7 @@ import type {
   ToothState,
 } from '@/typing/components/odontogram.types'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
-import { ALL_TEETH, WHOLE_TOOTH_MARKS } from '@/constants/odontogram'
+import { ALL_TEETH, MARK, WHOLE_TOOTH_MARKS } from '@/constants/odontogram'
 
 /** Build a blank tooth state. */
 const blankTooth = (): ToothState => ({
@@ -32,12 +32,12 @@ const legacySurfaceToMark = (legacyState: string | undefined): MarkType | null =
   if (!legacyState) return null
 
   switch (legacyState) {
-    case 'cavity':
-    case 'filled':
-    case 'crown':
-    case 'extraction':
-    case 'extracted':
-    case 'rootcanal':
+    case MARK.CAVITY:
+    case MARK.FILLED:
+    case MARK.CROWN:
+    case MARK.EXTRACTION:
+    case MARK.EXTRACTED:
+    case MARK.ROOTCANAL:
       return legacyState
 
     default:
@@ -142,15 +142,15 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
       continue
     }
 
-    if (tooth.mark === 'extracted') {
+    if (tooth.mark === MARK.EXTRACTED) {
       missing++
 
       continue
     }
 
-    const hasCavity = Object.values(tooth.surfaces).some(mark => mark === 'cavity')
+    const hasCavity = Object.values(tooth.surfaces).some(mark => mark === MARK.CAVITY)
 
-    const hasFilling = Object.values(tooth.surfaces).some(mark => mark === 'filled')
+    const hasFilling = Object.values(tooth.surfaces).some(mark => mark === MARK.FILLED)
 
     const hasAnyMark =
       tooth.mark !== null || Object.values(tooth.surfaces).some(mark => mark !== null)
@@ -210,7 +210,7 @@ export const useOdontogramState = (
     return persisted ?? buildInitialState(initialData)
   })
 
-  const [activeTool, setActiveTool] = useState<ActiveTool>('cavity')
+  const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
 
   const [dentition, setDentition] = useState<DentitionType>('permanent')
 

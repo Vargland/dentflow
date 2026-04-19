@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   HEALTHY_COLOR,
+  MARK,
   MARK_TYPES,
   PERMANENT_LOWER,
   PERMANENT_UPPER,
@@ -327,9 +328,9 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
       <div className="flex gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
         {(
           [
-            { key: 'cavities', value: metrics.cavities, color: TOOL_COLORS.cavity },
-            { key: 'fillings', value: metrics.fillings, color: TOOL_COLORS.filled },
-            { key: 'missing', value: metrics.missing, color: TOOL_COLORS.extracted },
+            { key: 'cavities', value: metrics.cavities, color: TOOL_COLORS[MARK.CAVITY] },
+            { key: 'fillings', value: metrics.fillings, color: TOOL_COLORS[MARK.FILLED] },
+            { key: 'missing', value: metrics.missing, color: TOOL_COLORS[MARK.EXTRACTED] },
             { key: 'healthy', value: metrics.healthy, color: HEALTHY_COLOR },
           ] as const
         ).map(({ key, value, color }) => (
