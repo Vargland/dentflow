@@ -93,34 +93,72 @@ render UI
 
 Client Component:
 
-```
+```ts
+// Get the token from the Auth.js session — the ONLY approved pattern
+const { data: session } = useSession()
+const token = session?.accessToken ?? ''
 service.getX(token) → Go API
 ```
+
+### Sensitive data rule
+
+Data classified as sensitive (patient records, odontogram, clinical notes,
+personal identifiers) MUST be fetched in **Server Components only**.
+
+Client Components may only call services for:
+
+- User-initiated mutations (create, update, delete)
+- Search/autocomplete triggered by user input
+
+If unsure whether data is sensitive: default to Server Component.
+
+### Route Handlers
+
+Route Handlers (`src/app/api/`) are permitted **only** for:
+
+- Auth.js internal OAuth callbacks (`/api/auth/[...nextauth]`)
+- OAuth redirect callbacks that cannot be handled by the Go API
+  (e.g. Google Calendar OAuth callback that requires a browser redirect
+  back to the Next.js app)
+
+Route Handlers MUST NOT:
+
+- ❌ Fetch or mutate application data (patients, appointments, odontogram)
+- ❌ Access the database directly
+- ❌ Contain business logic
+
+If a task seems to need a Route Handler for data: stop — it belongs in the
+Go API.
 
 ---
 
 ## Spec-Driven Development
 
-### Spec REQUIRED for
+Any work that touches the API contract or the database requires an approved
+spec before writing code. See `src/specs/README.md` for the template.
 
-- New database entities
-- New API endpoints (Go)
-- Changes to existing API contracts
-- Complex multi-domain flows
+### Requires a spec — STOP, do not code without one
 
-### Spec NOT required for
+- New Go API endpoints
+- Changes to an existing API request or response shape
+- New database entities or migrations
+- Complex multi-domain flows (e.g. OAuth + external API + DB)
 
-- UI-only changes
-- New or refactored components
-- Bug fixes
-- Using existing endpoints
+### Does NOT require a spec — proceed directly
 
-### Agent behavior
+- UI-only changes: layout, styling, copy, component refactors
+- New components or pages that consume **existing, unchanged** endpoints
+- Bug fixes that do not change the API contract
+- Adding i18n keys, constants, or types for existing functionality
 
-- ✅ Proceed if you are only consuming existing APIs.
-- ❌ STOP if you need a new API or a contract change — ask for a spec.
+### Agent decision rule (unambiguous)
 
-Specs live in `src/specs/`. See `src/specs/README.md` for the template.
+> Does this task require a new endpoint, a contract change, or a migration?
+>
+> - **YES** → STOP. Create the spec first. Do not write any code.
+> - **NO** → Proceed. No spec needed.
+
+If the answer is unclear: treat it as YES and ask.
 
 ---
 
@@ -143,6 +181,9 @@ Responsibilities:
 - Handle HTTP errors.
 - Parse JSON responses.
 - Validate payloads with Zod — never return raw/unvalidated data.
+- All GET requests use `cache: 'no-store'` — medical data must never be stale.
+  Do NOT override this with `force-cache`, `revalidate`, or any other cache
+  strategy unless a spec explicitly requires it and the architect approves.
 
 ```ts
 /**
@@ -153,6 +194,53 @@ export const getPatients = async (token: string): Promise<Patient[]> => {
   return PatientListSchema.parse(res)
 }
 ```
+
+### Error handling contract
+
+Services throw `ApiError` (from `api-client.ts`) on any non-2xx response.
+Components MUST handle errors — never let them propagate silently.
+
+**Server Component (data fetch on render):**
+
+```ts
+import { redirect } from 'next/navigation'
+import { ApiError } from '@/services/api-client'
+
+try {
+  const data = await someService.getData(token)
+} catch (err) {
+  if (err instanceof ApiError && err.status === 401) redirect('/login')
+  throw err // let Next.js error.tsx handle it
+}
+```
+
+**Client Component (mutation or user-initiated fetch):**
+
+```ts
+import { ApiError } from '@/services/api-client'
+
+try {
+  await someService.doAction(token, input)
+} catch (err) {
+  if (err instanceof ApiError && err.status === 401) {
+    // session expired — redirect to login
+    router.push('/login')
+    return
+  }
+  // show user-facing error via toast or inline state — use t() for the message
+  setError(err instanceof ApiError ? err.message : t('errors.unexpected'))
+}
+```
+
+**Rules:**
+
+- `401` always → redirect to `/login` (session expired or invalid).
+- `403` → show permission error, do NOT redirect.
+- `404` → render empty/not-found UI state.
+- `409` → surface conflict message to the user (e.g. overlapping appointment).
+- `5xx` → throw so `error.tsx` catches it, or show a generic toast.
+- Never swallow errors silently.
+- Error messages shown to users MUST go through `t()`.
 
 ---
 
@@ -329,8 +417,11 @@ Available aliases (`tsconfig.json`):
 ## Git Workflow
 
 - ❌ NEVER push to `main` directly.
-- All work on feature branches: `feature/<short-description>`
-  (e.g. `feature/google-calendar`, `docs/architecture-v2`).
+- All work on typed branches — valid prefixes:
+  - `feature/<short-description>` — new functionality
+  - `fix/<short-description>`     — bug fixes
+  - `chore/<short-description>`   — config, tooling, deps, docs
+  - `docs/<short-description>`    — documentation only
 - Commits MUST pass Husky + lint-staged hooks (ESLint + typecheck).
 - PR → merge into `main` only after review.
 - **Before any new commit, verify the current branch is not already merged.**

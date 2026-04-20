@@ -21,6 +21,15 @@ export default auth(req => {
     return NextResponse.redirect(loginUrl)
   }
 
+  // Google login was rejected by the Go API — deny access
+  if (req.auth.error === 'GoogleLoginFailed') {
+    const loginUrl = new URL('/login', req.url)
+
+    loginUrl.searchParams.set('error', 'google_login_failed')
+
+    return NextResponse.redirect(loginUrl)
+  }
+
   return NextResponse.next()
 })
 
