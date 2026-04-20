@@ -2,13 +2,45 @@
 
 # DentFlow — Engineering Protocol
 
-## Project Overview
-Dental practice management MVP. Patients, interactive odontogram (SVG/JSONB), clinical records, and Google Calendar integration for appointments.
+Dental practice management MVP. Patients, interactive odontogram (SVG + JSONB),
+clinical records, and appointments with Google Calendar integration.
+
+> High-level system overview → [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+> Go API specification     → [`BACKEND_ARCHITECTURE.md`](./BACKEND_ARCHITECTURE.md)
+
+---
+
+## Agent Behavior Mode: STRICT
+
+When rules are violated:
+
+- ❌ DO NOT proceed
+- ✅ STOP and explain the issue
+
+### Decision rules for AI agents
+
+If unsure:
+
+1. Prefer **services** over any other data access.
+2. Do not mix architectures (frontend vs backend responsibilities).
+3. Do not create new patterns — reuse what exists.
+4. Ask for a spec if backend contract changes are required.
+
+### Rule priority (when two rules conflict)
+
+1. Architecture (data flow, backend/frontend separation)
+2. Spec rules
+3. Data validation & typing
+4. Component structure
+5. Style & conventions
+
+---
 
 ## Tech Stack
 
 ### Frontend (Next.js)
-- **Framework:** Next.js App Router — pure frontend, no Server Actions (see Architecture)
+
+- **Framework:** Next.js App Router — pure frontend, no Server Actions for data
 - **Auth:** Auth.js v5 (NextAuth) — Google OAuth, issues JWT
 - **Data:** `src/services/*.ts` → REST calls to Go API with JWT Bearer
 - **UI:** Tailwind CSS + shadcn/ui + Lucide Icons
@@ -16,178 +48,431 @@ Dental practice management MVP. Patients, interactive odontogram (SVG/JSONB), cl
 - **Validation:** Zod (parse API responses)
 
 ### Backend (Go API)
+
 - **Language:** Go 1.22+
 - **Router:** chi
-- **Database:** PostgreSQL (Neon) via pgx + sqlc
-- **Auth:** JWT validation (shared AUTH_SECRET with Auth.js)
+- **Database:** PostgreSQL (Neon) via pgx + sqlc (no ORM)
+- **Auth:** JWT validation (shared `AUTH_SECRET` with Auth.js)
 - **Validation:** ozzo-validation
 - **Migrations:** golang-migrate
-- **See:** `BACKEND_ARCHITECTURE.md` for full spec
+- **See:** [`BACKEND_ARCHITECTURE.md`](./BACKEND_ARCHITECTURE.md) for the full spec.
 
-## Spec-Driven Development (regla de oro)
+---
 
-**Ninguna feature se codea sin una spec aprobada en `src/specs/`.**
+## Architecture (Single Source of Truth)
 
-El flujo es siempre:
+- Next.js is **pure frontend**.
+- Go API is the **only backend**.
+
+### Strict rules
+
+- ❌ NO Server Actions for data
+- ❌ NO database access from frontend
+- ❌ NO Prisma in frontend
+- ❌ NO raw `fetch()` in components
+- ❌ NO business logic in components
+- ❌ NO hardcoded UI strings
+- ❌ NO duplicated business constants
+- ❌ NO ambiguous single-letter identifiers
+- ✅ ALL data goes through `src/services/`
+- ✅ Backend handles ALL business logic and validation
+
+### Data flow
+
 ```
-1. Crear src/specs/feature-<nombre>.md  → definir contrato
-2. Validar con el usuario               → spec aprobada
-3. Codear                               → UI + DB + Actions
+Component → Service → Go API → Database
 ```
 
-No se crea ningún modelo Prisma, Server Action, página ni componente nuevo hasta que la spec esté aprobada. Ver `src/specs/README.md` para el template y las reglas completas.
+Server Component:
 
-## Critical Rules
+```
+auth() → get JWT
+service.getX(token)
+render UI
+```
 
-### Language & Comments
-- **All code in English** — variable names, function names, file names, folder names.
-- **TSDoc comments** on every exported function, component, type and interface:
-  ```ts
-  /**
-   * Brief description.
-   * @param x - what x is
-   * @returns what it returns
-   */
-  ```
-- **No inline comments** in Spanish.
+Client Component:
 
-### Commits
-- **Conventional Commits** always:
-  `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `style:`, `test:`
-- Example: `feat(patients): add search by DNI`
+```
+service.getX(token) → Go API
+```
 
-### Typing
-- All types/interfaces in `src/typing/` organized as:
-  - `typing/services/` → `interface` for DB/API/Server Action shapes
-  - `typing/components/` → `type` for props, local unions
-  - `typing/pages/` → `type` for page params and searchParams
-- **`interface`** for anything touching services/Prisma/API
-- **`type`** for UI props, unions, utility shapes
+---
 
-### Path Aliases
-- Always use `@/` aliases — **never** relative `../../` imports.
-- Available aliases: `@/ui/*`, `@/components/*`, `@/lib/*`, `@/typing/*`, `@/locales/*`
+## Spec-Driven Development
 
-### Components
-- **Shared components** (used in >1 route) → `src/components/<domain>/`
-- **Route-specific components** → `src/app/.../<route>/_components/`
-- Never import a `_components/` file from outside its route.
+### Spec REQUIRED for
 
-### TypeScript
-- **No `any`** — ever. Use `unknown` + type guards, or proper interfaces.
-- **Zod** for all external input validation (form data, API responses, env vars).
-- Run `npx tsc --noEmit` before committing. Zero errors required.
+- New database entities
+- New API endpoints (Go)
+- Changes to existing API contracts
+- Complex multi-domain flows
 
-### Git Workflow
-- **NEVER push to `main`** directly.
-- All work on feature branches: `feature/<short-description>` (e.g. `feature/google-calendar`).
-- Commits must pass Husky + lint-staged hooks (ESLint + type check).
+### Spec NOT required for
+
+- UI-only changes
+- New or refactored components
+- Bug fixes
+- Using existing endpoints
+
+### Agent behavior
+
+- ✅ Proceed if you are only consuming existing APIs.
+- ❌ STOP if you need a new API or a contract change — ask for a spec.
+
+Specs live in `src/specs/`. See `src/specs/README.md` for the template.
+
+---
+
+## Services Layer
+
+All API communication lives in `src/services/`, organised by domain:
+
+```
+src/services/
+  api-client.ts
+  patients.service.ts
+  appointments.service.ts
+  odontogram.service.ts
+  ...
+```
+
+Responsibilities:
+
+- Attach JWT (`Authorization: Bearer <token>`).
+- Handle HTTP errors.
+- Parse JSON responses.
+- Validate payloads with Zod — never return raw/unvalidated data.
+
+```ts
+/**
+ * Fetches patients for the authenticated user.
+ */
+export const getPatients = async (token: string): Promise<Patient[]> => {
+  const res = await apiClient.get('/patients', token)
+  return PatientListSchema.parse(res)
+}
+```
+
+---
+
+## Validation
+
+- ALL API responses MUST be validated with Zod.
+- NEVER trust external data.
+
+```ts
+const parsed = schema.parse(response)
+```
+
+---
+
+## Typing
+
+All types and interfaces live in `src/typing/`, organised by domain:
+
+```
+src/typing/
+  services/      # interface — DB/API/service contracts
+  components/    # type      — UI props, local unions
+  pages/         # type      — page params & searchParams
+```
+
+Rules:
+
+- `interface` for anything touching services/API.
+- `type` for UI props, unions, utility shapes.
+- ❌ NO `any` — use `unknown` + type guards, or proper interfaces.
+- ✅ Run `npx tsc --noEmit` before committing. Zero errors required.
+
+---
+
+## Constants Layer
+
+Shared business constants and domain jargon live in `src/constants/`:
+
+```
+src/constants/
+  odontogram.ts   # MARK enum, TOOL_COLORS, FDI layouts, ...
+```
+
+Rules:
+
+- Use named constants (`MARK.CROWN`) instead of bare string literals
+  (`'crown'`) anywhere outside the constants file.
+- Keys match the API contract when the constant crosses the wire.
+- No duplicated literals across files.
+
+---
+
+## Components
+
+### Structure
+
+- **Shared** (used in >1 route) → `src/components/<domain>/`
+- **Route-specific**            → `src/app/.../_components/`
+
+### Strict isolation
+
+- ❌ NEVER import a `_components/` file from outside its route.
+
+### Promotion rule
+
+Promote `_components` → shared when:
+
+- Used in 2+ routes, OR
+- Clearly reusable.
+
+Steps:
+
+1. Move the file to `src/components/<domain>/`.
+2. Update imports across the app.
+
+### Rendering strategy
+
+- **Server Component** (default): data fetching + initial render.
+- **Client Component** (`'use client'`): interactivity, state, browser APIs.
+
+Rule: default to Server Components. Only add `'use client'` when hooks,
+event handlers, or browser APIs are required.
+
+---
+
+## i18n
+
+```
+src/lib/i18n/
+  settings.ts     # languages, fallback, cookie name
+  server.ts       # getTranslation(lang) — Server Components
+  client.ts       # useTranslation()     — Client Components
+
+src/locales/
+  en/common.json
+  es/common.json
+```
+
+Rules:
+
+- ALL user-visible strings go through `t()`.
+- Server Components use `getTranslation(lang)` from `@/lib/i18n/server`.
+- Client Components use `useTranslation()` from `@/lib/i18n/client`.
+- Language detected from cookie `dentflow-lang`. No URL prefix
+  (`/patients`, not `/es/patients`).
+
+### When adding a key
+
+1. Add it to `src/locales/en/common.json`.
+2. **Immediately** add the translation to `src/locales/es/common.json`.
+3. ❌ NEVER leave a key missing in either file.
+
+---
+
+## Odontogram
+
+- Rendered as **interactive SVG** only. No canvas, no chart libraries.
+- State shape: `Record<number, ToothState>` keyed by **FDI** tooth numbers
+  (permanent 11–48, temporary 51–85).
+- Persisted as **JSONB** in the API via `saveOdontogram()`.
+- Clinical marks (`MARK.CAVITY`, `MARK.FILLED`, `MARK.CROWN`,
+  `MARK.EXTRACTION`, `MARK.ROOTCANAL`, `MARK.EXTRACTED`) come from
+  `src/constants/odontogram.ts` — never hardcode the strings.
+
+---
+
+## Security
+
+- Sensitive data is always fetched server-side, scoped by `userId`.
+- Frontend MAY send IDs; backend MUST validate ownership before returning
+  or mutating anything.
+- ❌ Never trust client-side data.
+- ❌ Never expose data without ownership validation.
+- Auth middleware at `src/middleware.ts` protects all routes except
+  `/login` and `/api/auth`.
+
+---
+
+## Language & Comments
+
+- All code in English — variable names, function names, file names, folder names.
+- TSDoc on every exported function, component, type and interface:
+
+```ts
+/**
+ * Brief description.
+ * @param x - what x is
+ * @returns what it returns
+ */
+```
+
+- ❌ NO Spanish in code or inline comments.
+
+---
+
+## Path Aliases
+
+Always use `@/` aliases — ❌ never relative `../../` imports.
+
+Available aliases (`tsconfig.json`):
+
+```
+@/*             → ./src/*
+@/ui/*          → ./src/components/ui/*
+@/components/*  → ./src/components/*
+@/actions/*     → ./src/actions/*
+@/lib/*         → ./src/lib/*
+@/typing/*      → ./src/typing/*
+@/locales/*     → ./src/locales/*
+```
+
+---
+
+## Git Workflow
+
+- ❌ NEVER push to `main` directly.
+- All work on feature branches: `feature/<short-description>`
+  (e.g. `feature/google-calendar`, `docs/architecture-v2`).
+- Commits MUST pass Husky + lint-staged hooks (ESLint + typecheck).
 - PR → merge into `main` only after review.
+- **Before any new commit, verify the current branch is not already merged.**
+  If the matching PR is closed/merged, start a new branch from fresh `main`.
 
-### Architecture
-- **Server Components by default.** Only add `'use client'` when you need browser APIs, event handlers, or React hooks.
-- **All data fetching goes through `src/services/`** — never call `fetch()` directly from a component.
-- **No Server Actions — ever.** Next.js must stay pure frontend. No file may contain `"use server"`. This covers data mutations **and** platform operations (cookies, redirects). Anything that needs to run server-side goes in a Route Handler under `src/app/api/<name>/route.ts` that proxies to the Go API or handles Next-owned state (e.g. the language cookie). Enforced by ESLint: `no-restricted-syntax` blocks the `"use server"` directive.
-- **No Prisma, no DB access** from Next.js. All persistence lives behind the Go API.
-- **No raw SQL** — Go backend uses sqlc only.
-- Services attach the JWT from Auth.js session to every request: `Authorization: Bearer <token>`
+### Conventional Commits
 
-### Odontogram
-- Rendered as interactive SVG. Never use a canvas or third-party chart lib.
-- State shape: `Record<number, ToothState>` where keys are FDI tooth numbers (11–48).
-- Persisted as JSONB by the Go API — the frontend calls the odontogram service in `src/services/`, never a Server Action.
+Format:
 
-### i18n
-- All user-facing strings go through `t()` — no hardcoded UI text.
-- Server Components: `getTranslation(lang)` from `@/lib/i18n/server`
-- Client Components: `useTranslation()` from `@/lib/i18n/client`
-- Add new keys to **both** `src/locales/en/common.json` and `src/locales/es/common.json`.
-
-### Security
-- Sensitive data (patient records) always fetched server-side, scoped by `userId`.
-- Never expose raw DB ids in client state without ownership check.
-- Auth middleware at `src/middleware.ts` protects all routes except `/login` and `/api/auth`.
-
-## Development Commands
-
-### Frontend (Next.js)
-```bash
-npm run dev           # Start dev server (port 3000)
-npm run build         # Production build
-npm run lint          # ESLint
-npm run lint:fix      # ESLint with auto-fix
-npm run format        # Prettier
-npm run format:check  # Prettier check
-npm run typecheck     # tsc --noEmit (zero errors required)
-```
-
-### Backend (Go) — run from dentflow-api/
-```bash
-make run              # Start Go API (port 8080)
-make build            # Build binary
-make test             # go test ./... -race
-make fmt              # go fmt ./...
-make vet              # go vet ./...
-make lint             # staticcheck ./...
-make migrate-up       # Run pending migrations
-make migrate-down     # Rollback last migration
-make sqlc             # Regenerate sqlc types
-```
-
-## Project Structure
-```
-src/
-├── app/
-│   ├── (auth)/       # Public: /login
-│   ├── (dashboard)/  # Protected: /patients, /turnos
-│   └── api/          # Route Handlers (thin: auth, platform cookies, proxies)
-├── components/       # Shared UI components
-├── services/         # REST calls to the Go API (JWT attached per request)
-├── lib/
-│   ├── auth.ts       # NextAuth config
-│   └── i18n/         # i18next config (client + server + settings)
-└── locales/
-    ├── en/common.json
-    └── es/common.json
-```
-
-## Pre-commit Hooks (automated via Husky + lint-staged)
-
-These run automatically on every `git commit`. All must pass:
-
-| Check | Command | Scope |
-|-------|---------|-------|
-| ESLint (auto-fix) | `eslint --fix --max-warnings=0` | `src/**/*.{js,ts,tsx,json}` |
-| Prettier (format) | `prettier --write` | `src/**/*.{js,ts,tsx,json}` |
-| TypeScript | `tsc -p tsconfig.json --noEmit` | `src/**/*.{ts,tsx}` |
-| Tests | `npm run test` | `src/**/*.{ts,tsx}` |
-| Commit message | commitlint (`@commitlint/config-conventional`) | commit msg |
-
-### ESLint Rules Enforced
-
-**Core:** `no-console` (warn/error only) · `max-len` (120) · `max-params` (3) · `no-underscore-dangle` · `object-curly-spacing`
-
-**TypeScript:** `@typescript-eslint/no-explicit-any` · `@typescript-eslint/no-use-before-define`
-
-**React:** `react/function-component-definition` (arrow functions only) · `react/jsx-key` · `react-hooks/rules-of-hooks` · `react-hooks/exhaustive-deps` · `react-refresh/only-export-components`
-
-**Stylistic:** `@stylistic/padding-line-between-statements` (blank line between statements; off in `index.ts`)
-
-**Import order** (simple-import-sort): CSS → external packages → internal (`@/typing` → `@/lib` → `@/components/ui` → `@/components` → `@/`) → relative
-
-### Prettier Config
-`printWidth: 100` · `semi: false` · `singleQuote: true` · `trailingComma: es5` · `arrowParens: avoid`
-
-### Commit Message Format
 ```
 type(scope): subject
 ```
-Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert`
+
+Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build`
+`ci` `chore` `revert`.
+
+Example: `feat(patients): add search by DNI`.
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (auth)/        # Public: /login
+│   └── (dashboard)/   # Protected: /patients, /appointments, /settings, ...
+├── components/        # Shared UI components (used in >1 route)
+├── constants/         # Shared business constants (MARK enum, ...)
+├── lib/
+│   ├── auth.ts        # NextAuth config
+│   └── i18n/          # i18next config (client + server + settings)
+├── locales/
+│   ├── en/common.json
+│   └── es/common.json
+├── services/          # API client layer (the only caller of fetch())
+├── specs/             # Spec-Driven Development
+└── typing/            # interface + type, organised by domain
+```
+
+---
+
+## Development Commands
+
+### Frontend (Next.js) — run from repo root
+
+```bash
+npm run dev            # Dev server (port 3000)
+npm run build          # Production build
+npm run lint           # ESLint
+npm run lint:fix       # ESLint with auto-fix
+npm run format         # Prettier
+npm run format:check   # Prettier check
+npm run typecheck      # tsc --noEmit (zero errors required)
+```
+
+### Backend (Go) — run from `dentflow-api/`
+
+```bash
+make run               # Start Go API (port 8080)
+make build             # Build binary
+make test              # go test ./... -race
+make fmt               # go fmt ./...
+make vet               # go vet ./...
+make lint              # staticcheck ./...
+make migrate-up        # Run pending migrations
+make migrate-down      # Rollback last migration
+make sqlc              # Regenerate sqlc types
+```
+
+---
+
+## Pre-commit Hooks (Husky + lint-staged)
+
+All must pass on every `git commit`:
+
+| Check             | Command                                        | Scope                        |
+| ----------------- | ---------------------------------------------- | ---------------------------- |
+| ESLint (auto-fix) | `eslint --fix --max-warnings=0`                | `src/**/*.{js,ts,tsx,json}`  |
+| Prettier (format) | `prettier --write`                             | `src/**/*.{js,ts,tsx,json}`  |
+| TypeScript        | `tsc -p tsconfig.json --noEmit`                | `src/**/*.{ts,tsx}`          |
+| Tests             | `npm run test`                                 | `src/**/*.{ts,tsx}`          |
+| Commit message    | commitlint (`@commitlint/config-conventional`) | commit message               |
+
+### ESLint rules enforced
+
+**Core:** `no-console` (warn/error only) · `max-len` (120) · `max-params` (3)
+· `no-underscore-dangle` · `object-curly-spacing` · `id-length` (min 3,
+whitelist: `i j id to fd cn ev`).
+
+**TypeScript:** `@typescript-eslint/no-explicit-any` ·
+`@typescript-eslint/no-use-before-define`.
+
+**React:** `react/function-component-definition` (arrow functions only) ·
+`react/jsx-key` · `react-hooks/rules-of-hooks` ·
+`react-hooks/exhaustive-deps` · `react-refresh/only-export-components`.
+
+**Stylistic:** `@stylistic/padding-line-between-statements` (blank line
+between statements; disabled in `index.ts`).
+
+**Import order** (simple-import-sort): CSS → external packages → internal
+(`@/typing` → `@/lib` → `@/actions` → `@/components/ui` → `@/components`
+→ `@/`) → relative.
+
+### Prettier config
+
+`printWidth: 100` · `semi: false` · `singleQuote: true`
+· `trailingComma: es5` · `arrowParens: avoid`.
+
+---
+
+## No New Patterns Rule (CRITICAL)
+
+- ❌ Do NOT introduce new patterns or abstractions.
+- ✅ Always follow the existing structure.
+
+If unsure:
+
+- Reuse an existing service.
+- Reuse an existing component.
+- Do not invent an abstraction to "clean things up" mid-task.
+
+---
 
 ## Before Every Commit Checklist
-- [ ] No `any` types introduced
-- [ ] New UI strings added to both locale files
-- [ ] `npm run typecheck` passes (zero errors)
-- [ ] `npm run lint` passes (zero errors)
-- [ ] `npm run format:check` passes
-- [ ] Working on a `feature/` branch (not `main`)
+
+- [ ] No `any` types introduced.
+- [ ] No hardcoded UI strings — all through `t()`.
+- [ ] New i18n keys added to **both** `en/common.json` and `es/common.json`.
+- [ ] New domain constants live in `src/constants/` (no duplicated literals).
+- [ ] `npm run typecheck` passes (zero errors).
+- [ ] `npm run lint` passes (zero errors).
+- [ ] `npm run format:check` passes.
+- [ ] Working on a `feature/` or `docs/` branch — not `main`.
+- [ ] Branch is **not** already merged (if unsure: `git fetch` + check PR state).
+
+---
+
+## Final Principle
+
+> The frontend renders.
+> The backend decides.
+> The database persists.
+>
+> Simple, predictable, consistent code scales. Clever code does not.
