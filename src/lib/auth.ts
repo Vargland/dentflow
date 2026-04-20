@@ -138,24 +138,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return token
         }
 
-        // Fallback: mint a token with Google ID (calendar won't work but login will)
-        token.id = user.id
+        // Go API rejected the Google login — deny the session instead of minting
+        // a phantom token whose sub would not exist in the database.
+        console.error(`[auth] google-login rejected: ${res.status}`)
 
-        const { SignJWT } = await import('jose')
-
-        const secret = new TextEncoder().encode(process.env.AUTH_SECRET!)
-
-        token.accessToken = await new SignJWT({
-          sub: user.id ?? '',
-          email: user.email ?? '',
-          name: user.name ?? '',
-        })
-          .setProtectedHeader({ alg: 'HS256' })
-          .setIssuedAt()
-          .setExpirationTime('24h')
-          .sign(secret)
-
-        return token
+        return { ...token, error: 'GoogleLoginFailed' }
       }
 
       // Subsequent calls: check if the backend token needs refreshing
@@ -195,6 +182,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (session.user && token.id) {
         session.user.id = token.id as string
+      }
+
+      if (token.error) {
+        session.error = token.error
       }
 
       return session

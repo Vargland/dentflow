@@ -71,18 +71,41 @@ PostgreSQL (Neon)
 
 ## 3. Spec-Driven Development (golden rule)
 
-**No feature is coded without an approved spec in `src/specs/`.**
+**Any work that touches the API contract or the database requires an approved
+spec in `src/specs/` before a single line of code is written.**
 
-The flow is always:
+The flow for spec-required work is always:
 
 ```
 1. Create src/specs/feature-<name>.md   → define the contract
 2. Review with the user                  → spec approved
-3. Code                                  → UI + services + API
+3. Code                                  → UI + services + Go API
 ```
 
-No new page, component, service, type or API endpoint is created until the
-spec is approved. See `src/specs/README.md` for the template and full rules.
+### What requires a spec (STOP — do not code without one)
+
+- New Go API endpoints
+- Changes to an existing API request or response shape
+- New database entities or migrations
+- Complex multi-domain flows (e.g. OAuth + external API + DB)
+
+### What does NOT require a spec (proceed directly)
+
+- UI-only changes: layout, styling, copy, component refactors
+- New components or pages that consume **existing, unchanged** endpoints
+- Bug fixes that do not change the API contract
+- Adding i18n keys, constants, or types for existing functionality
+
+### Agent decision rule (unambiguous)
+
+> Does this task require a new endpoint, a contract change, or a migration?
+>
+> - **YES** → STOP. Create the spec first. Do not write any code.
+> - **NO** → Proceed. No spec needed.
+
+If the answer is unclear: treat it as YES and ask.
+
+See `src/specs/README.md` for the template and approval criteria.
 
 ---
 
@@ -294,8 +317,8 @@ Additional enforcement:
 - **`max-len: 120`**, **`max-params: 3`**.
 - **Commits** follow Conventional Commits:
   `feat(patients): add search by DNI`.
-- **Branches** — never push to `main` directly. Work on
-  `feature/<short-description>` and open a PR.
+- **Branches** — never push to `main` directly. Use typed prefixes:
+  `feature/`, `fix/`, `chore/`, `docs/`. Open a PR for every change.
 
 ---
 
@@ -310,10 +333,22 @@ The following patterns are **no longer part of the system**:
 | `src/actions/`                        | `src/services/`               |
 | Direct DB access from Next.js         | Go API only                   |
 | `src/lib/prisma.ts`, `src/lib/db/`    | Go repository layer           |
-| Route Handlers for data               | Auth.js OAuth handlers only   |
+| Route Handlers for data               | Go API endpoints              |
 
 Do not reintroduce any of the above. If a task seems to require it, stop
-and revisit the spec — the right answer is almost certainly an API call.
+and revisit the spec — the right answer is almost certainly a Go API call.
+
+### Route Handlers — permitted exceptions
+
+Route Handlers (`src/app/api/`) are permitted **only** for:
+
+1. Auth.js internal callbacks (`/api/auth/[...nextauth]`) — managed by Auth.js.
+2. OAuth redirect callbacks that require a browser redirect back into the
+   Next.js app (e.g. Google Calendar OAuth). These MUST only exchange the
+   authorization code and redirect — no data access.
+
+Any Route Handler that reads or writes application data is a violation of
+the architecture.
 
 ---
 
