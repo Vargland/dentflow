@@ -8,7 +8,7 @@ Dental practice management MVP. Patients, interactive odontogram (SVG/JSONB), cl
 ## Tech Stack
 
 ### Frontend (Next.js)
-- **Framework:** Next.js App Router — pure frontend, no Server Actions for data
+- **Framework:** Next.js App Router — pure frontend, no Server Actions (see Architecture)
 - **Auth:** Auth.js v5 (NextAuth) — Google OAuth, issues JWT
 - **Data:** `src/services/*.ts` → REST calls to Go API with JWT Bearer
 - **UI:** Tailwind CSS + shadcn/ui + Lucide Icons
@@ -66,7 +66,7 @@ No se crea ningún modelo Prisma, Server Action, página ni componente nuevo has
 
 ### Path Aliases
 - Always use `@/` aliases — **never** relative `../../` imports.
-- Available aliases: `@/ui/*`, `@/components/*`, `@/actions/*`, `@/lib/*`, `@/typing/*`, `@/locales/*`
+- Available aliases: `@/ui/*`, `@/components/*`, `@/lib/*`, `@/typing/*`, `@/locales/*`
 
 ### Components
 - **Shared components** (used in >1 route) → `src/components/<domain>/`
@@ -87,14 +87,15 @@ No se crea ningún modelo Prisma, Server Action, página ni componente nuevo has
 ### Architecture
 - **Server Components by default.** Only add `'use client'` when you need browser APIs, event handlers, or React hooks.
 - **All data fetching goes through `src/services/`** — never call `fetch()` directly from a component.
-- **No Server Actions for data** — Next.js is pure frontend. No Prisma, no DB access.
+- **No Server Actions — ever.** Next.js must stay pure frontend. No file may contain `"use server"`. This covers data mutations **and** platform operations (cookies, redirects). Anything that needs to run server-side goes in a Route Handler under `src/app/api/<name>/route.ts` that proxies to the Go API or handles Next-owned state (e.g. the language cookie). Enforced by ESLint: `no-restricted-syntax` blocks the `"use server"` directive.
+- **No Prisma, no DB access** from Next.js. All persistence lives behind the Go API.
 - **No raw SQL** — Go backend uses sqlc only.
 - Services attach the JWT from Auth.js session to every request: `Authorization: Bearer <token>`
 
 ### Odontogram
 - Rendered as interactive SVG. Never use a canvas or third-party chart lib.
 - State shape: `Record<number, ToothState>` where keys are FDI tooth numbers (11–48).
-- Persisted as JSONB in `Patient.odontograma` via `saveOdontogram()` Server Action.
+- Persisted as JSONB by the Go API — the frontend calls the odontogram service in `src/services/`, never a Server Action.
 
 ### i18n
 - All user-facing strings go through `t()` — no hardcoded UI text.
@@ -136,14 +137,14 @@ make sqlc             # Regenerate sqlc types
 ## Project Structure
 ```
 src/
-├── actions/          # Server Actions (mutations + queries)
 ├── app/
 │   ├── (auth)/       # Public: /login
-│   └── (dashboard)/  # Protected: /patients, /turnos
+│   ├── (dashboard)/  # Protected: /patients, /turnos
+│   └── api/          # Route Handlers (thin: auth, platform cookies, proxies)
 ├── components/       # Shared UI components
+├── services/         # REST calls to the Go API (JWT attached per request)
 ├── lib/
 │   ├── auth.ts       # NextAuth config
-│   ├── prisma.ts     # Prisma singleton
 │   └── i18n/         # i18next config (client + server + settings)
 └── locales/
     ├── en/common.json
@@ -172,7 +173,7 @@ These run automatically on every `git commit`. All must pass:
 
 **Stylistic:** `@stylistic/padding-line-between-statements` (blank line between statements; off in `index.ts`)
 
-**Import order** (simple-import-sort): CSS → external packages → internal (`@/typing` → `@/lib` → `@/actions` → `@/components/ui` → `@/components` → `@/`) → relative
+**Import order** (simple-import-sort): CSS → external packages → internal (`@/typing` → `@/lib` → `@/components/ui` → `@/components` → `@/`) → relative
 
 ### Prettier Config
 `printWidth: 100` · `semi: false` · `singleQuote: true` · `trailingComma: es5` · `arrowParens: avoid`

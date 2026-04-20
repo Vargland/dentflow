@@ -22,7 +22,6 @@
       "@/*":            ["./src/*"],
       "@/ui/*":         ["./src/components/ui/*"],
       "@/components/*": ["./src/components/*"],
-      "@/actions/*":    ["./src/actions/*"],
       "@/lib/*":        ["./src/lib/*"],
       "@/typing/*":     ["./src/typing/*"],
       "@/locales/*":    ["./src/locales/*"]
