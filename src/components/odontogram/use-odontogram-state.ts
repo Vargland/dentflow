@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import type {
   ActiveTool,
@@ -22,23 +22,21 @@ const blankTooth = (): ToothState => ({
 
 /**
  * Maps a surface state string from the API to the UI MarkType or null.
- * The UI now uses the same term set as the API; this helper just validates
- * and narrows the type, folding unknown states to `null`.
  *
- * @param legacyState - Surface state string from the API.
+ * @param value - Surface state string from the API.
  * @returns Corresponding MarkType or null.
  */
-const legacySurfaceToMark = (legacyState: string | undefined): MarkType | null => {
-  if (!legacyState) return null
+const toMarkType = (value: string | undefined): MarkType | null => {
+  if (!value) return null
 
-  switch (legacyState) {
+  switch (value) {
     case MARK.CAVITY:
     case MARK.FILLED:
     case MARK.CROWN:
     case MARK.EXTRACTION:
     case MARK.EXTRACTED:
     case MARK.ROOTCANAL:
-      return legacyState
+      return value
 
     default:
       return null
@@ -46,7 +44,7 @@ const legacySurfaceToMark = (legacyState: string | undefined): MarkType | null =
 }
 
 /**
- * Build the initial odontogram state from the API OdontogramState (may be null).
+ * Build the initial odontogram state from API data.
  *
  * @param initialData - Pre-fetched odontogram state from the API.
  * @returns Full OdontogramData keyed by FDI number.
@@ -55,9 +53,9 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
   const result: OdontogramData = {}
 
   for (const fdi of ALL_TEETH) {
-    const legacyTooth = initialData?.[fdi]
+    const apiTooth = initialData?.[fdi]
 
-    if (!legacyTooth) {
+    if (!apiTooth) {
       result[fdi] = blankTooth()
 
       continue
@@ -65,8 +63,7 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
 
     const tooth = blankTooth()
 
-    // Map legacy API surfaces (V, L→P, M, D, O) to current surfaces
-    const legacySurfaces: Array<[keyof typeof legacyTooth, Surface]> = [
+    const surfaceMap: Array<[keyof typeof apiTooth, Surface]> = [
       ['V', 'V'],
       ['L', 'P'],
       ['M', 'M'],
@@ -74,42 +71,14 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
       ['O', 'O'],
     ]
 
-    for (const [legacyKey, v2Key] of legacySurfaces) {
-      tooth.surfaces[v2Key] = legacySurfaceToMark(legacyTooth[legacyKey])
+    for (const [apiKey, uiKey] of surfaceMap) {
+      tooth.surfaces[uiKey] = toMarkType(apiTooth[apiKey])
     }
 
     result[fdi] = tooth
   }
 
   return result
-}
-
-/**
- * Persist unsaved odontogram changes to localStorage (draft buffer only).
- * The API is always the source of truth — localStorage is cleared on save.
- *
- * @param patientId - UUID of the patient (used as localStorage key).
- * @param state     - Full odontogram state to persist.
- */
-const persistDraft = (patientId: string, state: OdontogramData) => {
-  try {
-    localStorage.setItem(`odontogram_draft_${patientId}`, JSON.stringify(state))
-  } catch {
-    // Ignore storage errors (private browsing, quota exceeded, etc.)
-  }
-}
-
-/**
- * Clear the draft buffer after a successful API save.
- *
- * @param patientId - UUID of the patient.
- */
-const clearDraft = (patientId: string) => {
-  try {
-    localStorage.removeItem(`odontogram_draft_${patientId}`)
-  } catch {
-    // ignore
-  }
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
@@ -190,9 +159,10 @@ export interface UseOdontogramStateReturn {
 }
 
 /**
- * Manages the full odontogram state with localStorage persistence.
+ * Manages odontogram UI state. Initial data comes from the API; saves go back
+ * to the API via the Guardar button. No localStorage involved.
  *
- * @param patientId   - UUID of the patient (used as localStorage key).
+ * @param patientId   - UUID of the patient.
  * @param initialData - Pre-fetched odontogram state from the API.
  * @returns State and action handlers for the odontogram UI.
  */
@@ -200,7 +170,6 @@ export const useOdontogramState = (
   patientId: string,
   initialData: OdontogramState | null
 ): UseOdontogramStateReturn => {
-  // API data is always the source of truth on mount.
   const [teeth, setTeeth] = useState<OdontogramData>(() => buildInitialState(initialData))
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
@@ -211,20 +180,6 @@ export const useOdontogramState = (
 
   const [dirty, setDirty] = useState(false)
 
-  // Remove legacy localStorage keys that used to override API data on mount.
-  useEffect(() => {
-    try {
-      localStorage.removeItem(`odontogram_${patientId}`)
-    } catch {
-      /* ignore */
-    }
-  }, [patientId])
-
-  // Buffer unsaved changes to localStorage so they survive an accidental page refresh.
-  useEffect(() => {
-    persistDraft(patientId, teeth)
-  }, [patientId, teeth])
-
   const handleSurfaceClick = useCallback(
     (fdi: number, surface: Surface) => {
       setSelectedTooth(fdi)
@@ -233,13 +188,11 @@ export const useOdontogramState = (
         const current = prev[fdi] ?? blankTooth()
 
         if (WHOLE_TOOTH_MARKS.includes(activeTool)) {
-          // Whole-tooth tool applied via surface click → toggle on the tooth
           const newMark = current.mark === activeTool ? null : activeTool
 
           return { ...prev, [fdi]: { ...current, mark: newMark } }
         }
 
-        // Surface-level tool
         const currentSurface = current.surfaces[surface]
 
         const newSurface = currentSurface === activeTool ? null : activeTool
@@ -291,9 +244,7 @@ export const useOdontogramState = (
 
   const markSaved = useCallback(() => {
     setDirty(false)
-
-    clearDraft(patientId)
-  }, [patientId])
+  }, [])
 
   const metrics = computeMetrics(teeth)
 
