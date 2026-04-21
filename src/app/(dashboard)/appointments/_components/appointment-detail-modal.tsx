@@ -30,6 +30,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import Odontogram from '@/components/odontogram/odontogram'
+import { ApiError } from '@/services/api-client'
 import {
   deleteAppointment,
   sendAppointmentInvite,
@@ -201,8 +202,12 @@ const AppointmentTab = ({
         const res = await sendAppointmentInvite(token, appointment.id)
 
         toast.success(t('appointmentDetail.inviteSent', { email: res.sent_to }))
-      } catch {
-        toast.error(t('appointmentDetail.inviteError'))
+      } catch (err) {
+        if (err instanceof ApiError && err.code === 'GMAIL_SCOPE_MISSING') {
+          toast.error(t('appointmentDetail.inviteScopeError'))
+        } else {
+          toast.error(t('appointmentDetail.inviteError'))
+        }
       }
     })
   }

@@ -191,7 +191,8 @@
     "evolutionError": "Could not save record",
     "sendInvite": "Send invitation",
     "inviteSent": "Invitation sent to {{email}}",
-    "inviteError": "Could not send invitation"
+    "inviteError": "Could not send invitation",
+    "inviteScopeError": "Google account needs to be reconnected to enable email sending. Go to Settings and reconnect your Google account."
   },
   "appointments": {
     "title": "Appointments",
