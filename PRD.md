@@ -10,7 +10,7 @@
 
 DentFlow es una aplicación web SaaS para odontólogos independientes. Cada odontólogo tiene su propia cuenta aislada donde gestiona su práctica completa: pacientes, turnos, historial clínico, odontograma, pagos y facturación.
 
-**Stack:** Next.js 15 App Router · PostgreSQL (Neon) · Prisma ORM · Auth.js v5 · Tailwind CSS · shadcn/ui · i18next (ES/EN)
+**Stack:** Next.js 15 App Router · Go API (chi) · PostgreSQL (Neon) · pgx + sqlc · Auth.js v5 · Tailwind CSS · shadcn/ui · i18next (ES/EN)
 
 ---
 
@@ -184,114 +184,11 @@ Cada visita registra:
 
 ---
 
-## 5. Data Model (Prisma)
+## 5. Data Model
 
-```prisma
-model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String?       @unique
-  emailVerified DateTime?
-  image         String?
-  role          Role          @default(DENTIST)
-  profile       Profile?
-  patients      Patient[]
-  evolutions    Evolution[]
-  appointments  Appointment[]
-  budgets       Budget[]
-  createdAt     DateTime      @default(now())
-}
+El modelo de datos vive en el Go API. Ver [`BACKEND_ARCHITECTURE.md`](./BACKEND_ARCHITECTURE.md) para el esquema completo de tablas SQL (PostgreSQL via pgx + sqlc).
 
-model Profile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id])
-  phone           String?
-  address         String?
-  workingHours    Json?    // { mon: {from: "09:00", to: "18:00"}, ... }
-  appointmentDuration Int  @default(30)
-  reminderTemplate    String? @db.Text
-  whatsappTemplate    String? @db.Text
-}
-
-model Patient {
-  id              String        @id @default(cuid())
-  nombre          String
-  apellido        String
-  dni             String?
-  fechaNacimiento DateTime?
-  telefono        String?
-  email           String?
-  direccion       String?
-  obraSocial      String?
-  nroAfiliado     String?
-  alergias        String?       @db.Text
-  medicamentos    String?       @db.Text
-  antecedentes    String?       @db.Text
-  notas           String?       @db.Text
-  odontograma     Json?         // adult FDI surfaces
-  odontogramaPediatrico Json?   // pediatric FDI surfaces
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  evolutions      Evolution[]
-  appointments    Appointment[]
-  budgets         Budget[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model Evolution {
-  id              String      @id @default(cuid())
-  fecha           DateTime    @default(now())
-  descripcion     String      @db.Text
-  tratamiento     String?
-  dientes         Int[]
-  importe         Decimal?    @db.Decimal(10,2)
-  pagado          PaymentStatus @default(PENDING)
-  metodoPago      PaymentMethod?
-  proximaVisita   DateTime?
-  patientId       String
-  patient         Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-}
-
-model Appointment {
-  id          String            @id @default(cuid())
-  fecha       DateTime
-  duracion    Int               @default(30)
-  motivo      String?
-  notas       String?           @db.Text
-  estado      AppointmentStatus @default(SCHEDULED)
-  patientId   String
-  patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User              @relation(fields: [userId], references: [id])
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-}
-
-model Budget {
-  id          String       @id @default(cuid())
-  estado      BudgetStatus @default(DRAFT)
-  items       Json         // [{tratamiento, diente, importe}]
-  total       Decimal      @db.Decimal(10,2)
-  patientId   String
-  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User         @relation(fields: [userId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
-enum Role { DENTIST ADMIN }
-enum PaymentStatus { PENDING PAID PARTIAL }
-enum PaymentMethod { CASH TRANSFER INSURANCE CARD }
-enum AppointmentStatus { SCHEDULED CONFIRMED COMPLETED CANCELLED NO_SHOW }
-enum BudgetStatus { DRAFT SENT ACCEPTED REJECTED }
-```
+Entidades principales: `users`, `profiles`, `patients`, `evolutions`, `appointments`, `budgets`.
 
 ---
 

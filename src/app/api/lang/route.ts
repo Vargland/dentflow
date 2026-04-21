@@ -11,8 +11,7 @@ const bodySchema = z.object({
 })
 
 /**
- * Verifies the request originates from the same site. Next.js Server Actions
- * do this automatically; Route Handlers must check manually to prevent CSRF.
+ * Verifies the request originates from the same site to prevent CSRF.
  */
 const isSameOrigin = async (): Promise<boolean> => {
   const headerList = await headers()
@@ -32,8 +31,6 @@ const isSameOrigin = async (): Promise<boolean> => {
 
 /**
  * Persists the user's language preference in an HttpOnly-friendly cookie.
- * Replaces the former `setLang` Server Action so the frontend stays free of
- * `"use server"` code.
  */
 export const POST = async (request: Request) => {
   if (!(await isSameOrigin())) {
