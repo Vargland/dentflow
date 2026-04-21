@@ -129,7 +129,7 @@ const SectionLabel = ({ label }: SectionLabelProps) => (
  * - Whole-tooth marks: crown, extraction, rootcanal, extracted
  * - Permanent and temporary dentition tabs
  * - Metrics summary (cavities, fillings, missing, healthy)
- * - LocalStorage persistence + API save
+ * - API persistence via the Guardar button
  *
  * @param patientId   - UUID of the patient (also used as localStorage key).
  * @param initialData - Pre-fetched odontogram state from the API, may be null.
