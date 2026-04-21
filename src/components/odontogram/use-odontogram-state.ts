@@ -85,34 +85,30 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
 }
 
 /**
- * Persist the odontogram state to localStorage.
+ * Persist unsaved odontogram changes to localStorage (draft buffer only).
+ * The API is always the source of truth — localStorage is cleared on save.
  *
  * @param patientId - UUID of the patient (used as localStorage key).
  * @param state     - Full odontogram state to persist.
  */
-const persist = (patientId: string, state: OdontogramData) => {
+const persistDraft = (patientId: string, state: OdontogramData) => {
   try {
-    localStorage.setItem(`odontogram_${patientId}`, JSON.stringify(state))
+    localStorage.setItem(`odontogram_draft_${patientId}`, JSON.stringify(state))
   } catch {
     // Ignore storage errors (private browsing, quota exceeded, etc.)
   }
 }
 
 /**
- * Load persisted odontogram state from localStorage.
+ * Clear the draft buffer after a successful API save.
  *
  * @param patientId - UUID of the patient.
- * @returns Persisted state or null if not found.
  */
-const loadPersisted = (patientId: string): OdontogramData | null => {
+const clearDraft = (patientId: string) => {
   try {
-    const raw = localStorage.getItem(`odontogram_${patientId}`)
-
-    if (!raw) return null
-
-    return JSON.parse(raw) as OdontogramData
+    localStorage.removeItem(`odontogram_draft_${patientId}`)
   } catch {
-    return null
+    // ignore
   }
 }
 
@@ -204,11 +200,8 @@ export const useOdontogramState = (
   patientId: string,
   initialData: OdontogramState | null
 ): UseOdontogramStateReturn => {
-  const [teeth, setTeeth] = useState<OdontogramData>(() => {
-    const persisted = loadPersisted(patientId)
-
-    return persisted ?? buildInitialState(initialData)
-  })
+  // API data is always the source of truth on mount.
+  const [teeth, setTeeth] = useState<OdontogramData>(() => buildInitialState(initialData))
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
 
@@ -218,9 +211,18 @@ export const useOdontogramState = (
 
   const [dirty, setDirty] = useState(false)
 
-  // Sync to localStorage whenever teeth state changes
+  // Remove legacy localStorage keys that used to override API data on mount.
   useEffect(() => {
-    persist(patientId, teeth)
+    try {
+      localStorage.removeItem(`odontogram_${patientId}`)
+    } catch {
+      /* ignore */
+    }
+  }, [patientId])
+
+  // Buffer unsaved changes to localStorage so they survive an accidental page refresh.
+  useEffect(() => {
+    persistDraft(patientId, teeth)
   }, [patientId, teeth])
 
   const handleSurfaceClick = useCallback(
@@ -289,7 +291,9 @@ export const useOdontogramState = (
 
   const markSaved = useCallback(() => {
     setDirty(false)
-  }, [])
+
+    clearDraft(patientId)
+  }, [patientId])
 
   const metrics = computeMetrics(teeth)
 
