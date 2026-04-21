@@ -75,6 +75,9 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
       tooth.surfaces[uiKey] = toMarkType(apiTooth[apiKey])
     }
 
+    // Whole-tooth mark stored as 'mark' key in the API JSON
+    tooth.mark = toMarkType((apiTooth as Record<string, string>)['mark'])
+
     result[fdi] = tooth
   }
 

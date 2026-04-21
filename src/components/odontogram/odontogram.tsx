@@ -28,6 +28,37 @@ import { saveOdontogram } from '@/services/odontogram.service'
 import ToothSVG from './tooth-svg'
 import { useOdontogramState } from './use-odontogram-state'
 
+/**
+ * Converts internal OdontogramData to the API wire format.
+ * Internal: { mark, surfaces: {V,P,M,D,O} }
+ * API:      { V, L, M, D, O } where L is the palatal/lingual surface (P internally)
+ */
+const serializeForApi = (
+  teeth: Record<number, ToothState>
+): Record<string, Record<string, string>> => {
+  const result: Record<string, Record<string, string>> = {}
+
+  for (const [fdi, tooth] of Object.entries(teeth)) {
+    const apiTooth: Record<string, string> = {}
+
+    if (tooth.surfaces.V) apiTooth['V'] = tooth.surfaces.V
+
+    if (tooth.surfaces.M) apiTooth['M'] = tooth.surfaces.M
+
+    if (tooth.surfaces.D) apiTooth['D'] = tooth.surfaces.D
+
+    if (tooth.surfaces.O) apiTooth['O'] = tooth.surfaces.O
+
+    if (tooth.surfaces.P) apiTooth['L'] = tooth.surfaces.P
+
+    if (tooth.mark) apiTooth['mark'] = tooth.mark
+
+    result[fdi] = apiTooth
+  }
+
+  return result
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 interface ToothRowProps {
@@ -157,7 +188,7 @@ const Odontogram = ({ patientId, initialData, token }: OdontogramProps) => {
   const handleSave = () => {
     startTransition(async () => {
       await saveOdontogram(token, patientId, {
-        data: teeth as Record<string, unknown>,
+        data: serializeForApi(teeth),
       })
 
       markSaved()
