@@ -50,7 +50,7 @@ export const LoginForm = () => {
       return
     }
 
-    window.location.href = '/patients'
+    window.location.href = '/dashboard'
   }
 
   const handleRegister = async (event: React.FormEvent) => {
@@ -90,7 +90,7 @@ export const LoginForm = () => {
         return
       }
 
-      window.location.href = '/patients'
+      window.location.href = '/dashboard'
     } catch (err) {
       setLoading(false)
 
@@ -107,7 +107,7 @@ export const LoginForm = () => {
   const handleGoogleLogin = async () => {
     setLoading(true)
 
-    await signIn('google', { callbackUrl: '/patients' })
+    await signIn('google', { callbackUrl: '/dashboard' })
   }
 
   const switchView = (next: View) => {
