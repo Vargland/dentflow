@@ -191,7 +191,8 @@
     "evolutionError": "No se pudo guardar la evolucion",
     "sendInvite": "Enviar invitacion",
     "inviteSent": "Invitacion enviada a {{email}}",
-    "inviteError": "No se pudo enviar la invitacion"
+    "inviteError": "No se pudo enviar la invitacion",
+    "inviteScopeError": "Tu cuenta de Google necesita reconectarse para habilitar el envio de emails. Ve a Configuracion y vuelve a conectar tu cuenta."
   },
   "appointments": {
     "title": "Turnos",
