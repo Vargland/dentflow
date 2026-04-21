@@ -172,13 +172,13 @@ export const useOdontogramState = (
 ): UseOdontogramStateReturn => {
   const [teeth, setTeeth] = useState<OdontogramData>(() => buildInitialState(initialData))
 
+  const [dirty, setDirty] = useState(false)
+
   const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
 
   const [dentition, setDentition] = useState<DentitionType>('permanent')
 
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
-
-  const [dirty, setDirty] = useState(false)
 
   const handleSurfaceClick = useCallback(
     (fdi: number, surface: Surface) => {

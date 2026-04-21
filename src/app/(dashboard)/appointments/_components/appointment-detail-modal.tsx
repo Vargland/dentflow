@@ -551,7 +551,9 @@ const OdontogramTab = ({ patientId, token }: OdontogramTabProps) => {
     )
   }
 
-  return <Odontogram patientId={patientId} initialData={initialData} token={token} />
+  const dataKey = initialData ? JSON.stringify(Object.keys(initialData)) : 'empty'
+
+  return <Odontogram key={dataKey} patientId={patientId} initialData={initialData} token={token} />
 }
 
 // ---------------------------------------------------------------------------
