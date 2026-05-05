@@ -141,7 +141,24 @@
       "crown": "Crown",
       "extraction": "Extraction",
       "rootcanal": "Root canal",
-      "extracted": "Missing"
+      "extracted": "Missing",
+      "fixed_prosthesis": "Fixed prosthesis",
+      "removable_prosthesis": "Removable prosthesis"
+    },
+    "schemeSelector": {
+      "label": "Annotation scheme",
+      "international": "International",
+      "argentina": "Argentina"
+    },
+    "confirmSchemeChangeTitle": "Change annotation scheme",
+    "confirmSchemeChange": "Changing the scheme will clear the current annotations. Continue?",
+    "multiSelect": {
+      "hint": "Click teeth to select them",
+      "selected_one": "{{count}} tooth selected",
+      "selected_other": "{{count}} teeth selected",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "nonAdjacentError": "Fixed prosthesis requires adjacent teeth"
     }
   },
   "records": {

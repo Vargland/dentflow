@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Mail, MapPin, Pencil, Phone, ShieldCheck } from 'lucide-react'
 
+import type { AnnotationScheme } from '@/typing/components/odontogram.types'
 import type { PatientPageParams } from '@/typing/pages/patients.types'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
 import { auth } from '@/lib/auth'
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Odontogram from '@/components/odontogram/odontogram'
 import { ApiError } from '@/services/api-client'
+import { getSettings } from '@/services/appointments.service'
 import { getEvolutions } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
 
@@ -59,7 +61,12 @@ export default async function PatientPage({ params }: PatientPageParams) {
     notFound()
   }
 
-  const evolutions = await getEvolutions(token, id).catch(() => [])
+  const [evolutions, settings] = await Promise.all([
+    getEvolutions(token, id).catch(() => []),
+    getSettings(token).catch(() => null),
+  ])
+
+  const annotationScheme = (settings?.annotationScheme ?? 'international') as AnnotationScheme
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
@@ -143,6 +150,7 @@ export default async function PatientPage({ params }: PatientPageParams) {
             patientId={patient.id}
             initialData={patient.odontograma as OdontogramState | null}
             token={token}
+            initialScheme={annotationScheme}
           />
         </TabsContent>
 

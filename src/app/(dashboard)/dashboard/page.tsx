@@ -22,6 +22,7 @@ export default async function DashboardPage() {
       clinicAddress: '',
       clinicPhone: '',
       emailLanguage: 'es',
+      annotationScheme: 'international',
     })),
     (() => {
       // Build a UTC range for the entire local calendar day
@@ -47,5 +48,13 @@ export default async function DashboardPage() {
     (first, second) => new Date(first.start_time).getTime() - new Date(second.start_time).getTime()
   )
 
-  return <DashboardShell initialAppointments={sorted} timezone={settings.timezone} />
+  return (
+    <DashboardShell
+      initialAppointments={sorted}
+      timezone={settings.timezone}
+      annotationScheme={
+        (settings.annotationScheme ?? 'international') as 'international' | 'argentina'
+      }
+    />
+  )
 }

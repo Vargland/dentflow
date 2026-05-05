@@ -8,6 +8,8 @@ export type OdontogramProps = {
   initialData: OdontogramState | null
   /** JWT Bearer token forwarded from the session. */
   token: string
+  /** Annotation scheme from the doctor's settings (defaults to international). */
+  initialScheme?: AnnotationScheme
 }
 
 // ── Odontogram local types ────────────────────────────────────────────────────
@@ -21,8 +23,20 @@ export type Surface = 'V' | 'P' | 'M' | 'D' | 'O'
  *
  * Surface-level marks: `cavity` | `filled`
  * Whole-tooth marks:   `crown` | `extraction` | `rootcanal` | `extracted`
+ * Multi-tooth marks (argentina scheme only): `fixed_prosthesis` | `removable_prosthesis`
  */
-export type MarkType = 'cavity' | 'filled' | 'crown' | 'extraction' | 'rootcanal' | 'extracted'
+export type MarkType =
+  | 'cavity'
+  | 'filled'
+  | 'crown'
+  | 'extraction'
+  | 'rootcanal'
+  | 'extracted'
+  | 'fixed_prosthesis'
+  | 'removable_prosthesis'
+
+/** Annotation scheme selected by the dentist. */
+export type AnnotationScheme = 'international' | 'argentina'
 
 /** Per-tooth state stored in the odontogram. */
 export type ToothState = {

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import type { AnnotationScheme } from '@/typing/components/odontogram.types'
 import type { Appointment } from '@/typing/services/appointment.interface'
 import type { CreateEvolutionInput, Evolution } from '@/typing/services/evolution.interface'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
@@ -55,6 +56,8 @@ export interface AppointmentDetailModalProps {
   appointment: Appointment
   /** IANA timezone of the doctor. */
   timezone: string
+  /** Doctor's preferred annotation scheme for the odontogram. */
+  annotationScheme: AnnotationScheme
   /** Called when the modal is dismissed. */
   onClose: () => void
   /** Called after any mutation so the calendar can refresh. */
@@ -508,9 +511,10 @@ const EvolutionsTab = ({ patientId, token }: EvolutionsTabProps) => {
 interface OdontogramTabProps {
   patientId: string
   token: string
+  annotationScheme: AnnotationScheme
 }
 
-const OdontogramTab = ({ patientId, token }: OdontogramTabProps) => {
+const OdontogramTab = ({ patientId, token, annotationScheme }: OdontogramTabProps) => {
   const [initialData, setInitialData] = useState<OdontogramState | null>(null)
 
   const [loading, setLoading] = useState(true)
@@ -553,7 +557,15 @@ const OdontogramTab = ({ patientId, token }: OdontogramTabProps) => {
 
   const dataKey = initialData ? JSON.stringify(Object.keys(initialData)) : 'empty'
 
-  return <Odontogram key={dataKey} patientId={patientId} initialData={initialData} token={token} />
+  return (
+    <Odontogram
+      key={dataKey}
+      patientId={patientId}
+      initialData={initialData}
+      token={token}
+      initialScheme={annotationScheme}
+    />
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -663,6 +675,7 @@ const SimpleView = ({ appointment, timezone, onEdit, onDelete, isDeleting }: Sim
 export const AppointmentDetailModal = ({
   appointment,
   timezone,
+  annotationScheme,
   onClose,
   onUpdated,
 }: AppointmentDetailModalProps) => {
@@ -792,7 +805,11 @@ export const AppointmentDetailModal = ({
 
               <TabsContent value="odontogram" className="mt-4">
                 {patient && token ? (
-                  <OdontogramTab patientId={patient.id} token={token} />
+                  <OdontogramTab
+                    patientId={patient.id}
+                    token={token}
+                    annotationScheme={annotationScheme}
+                  />
                 ) : (
                   <div className="flex justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-gray-400" />

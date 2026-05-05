@@ -1,8 +1,13 @@
 'use client'
 
-import type { MarkType, Surface, ToothState } from '@/typing/components/odontogram.types'
+import type {
+  AnnotationScheme,
+  MarkType,
+  Surface,
+  ToothState,
+} from '@/typing/components/odontogram.types'
 import { useTranslation } from '@/lib/i18n/client'
-import { MARK, TOOL_COLORS } from '@/constants/odontogram'
+import { ANNOTATION_SCHEME, MARK, SCHEME_TOOL_COLORS } from '@/constants/odontogram'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -24,11 +29,6 @@ const SIZE = 40
 /** Inner square inset — distance from outer edge to center square. */
 const INSET = 10
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Resolve a surface mark to its CSS colour string. */
-const surfaceFill = (mark: MarkType | null): string => (mark ? TOOL_COLORS[mark] : FILL_EMPTY)
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 /** Props for the ToothSVG component. */
@@ -37,8 +37,12 @@ export interface ToothSVGProps {
   fdi: number
   /** Current tooth state. */
   state: ToothState
+  /** Active annotation scheme — determines colours and overlay rendering. */
+  scheme: AnnotationScheme
   /** Called when the user clicks a surface. */
   onSurfaceClick: (surface: Surface) => void
+  /** Whether this tooth is in the multi-tooth selection buffer. */
+  inSelectionBuffer?: boolean
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -55,14 +59,28 @@ export interface ToothSVGProps {
  *  - P (Palatino)    = right trapezoid:  (40,0)→(40,40)→(30,30)→(30,10)
  *  - O (Oclusal)     = center square:    (10,10) 20×20
  *
- * @param fdi            - FDI tooth number (used for aria-label).
- * @param state          - Current tooth state (surfaces + whole-tooth mark).
- * @param onSurfaceClick - Callback fired with the clicked surface identifier.
+ * @param fdi              - FDI tooth number (used for aria-label).
+ * @param state            - Current tooth state (surfaces + whole-tooth mark).
+ * @param scheme           - Active annotation scheme.
+ * @param onSurfaceClick   - Callback fired with the clicked surface identifier.
+ * @param inSelectionBuffer - Whether to render the selection highlight ring.
  */
-const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
+const ToothSVG = ({
+  fdi,
+  state,
+  scheme,
+  onSurfaceClick,
+  inSelectionBuffer = false,
+}: ToothSVGProps) => {
   const { t } = useTranslation()
 
   const { surfaces, mark } = state
+
+  const colors = SCHEME_TOOL_COLORS[scheme]
+
+  /** Resolve a surface mark to its CSS colour string for the active scheme. */
+  const surfaceFill = (surfaceMark: MarkType | null): string =>
+    surfaceMark ? colors[surfaceMark] : FILL_EMPTY
 
   /** Describe the tooth state for screen readers. */
   const ariaDescription = (): string => {
@@ -86,6 +104,8 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
     strokeWidth: STROKE_WIDTH,
     className: 'cursor-pointer hover:opacity-75 transition-opacity',
   }
+
+  const isArgentina = scheme === ANNOTATION_SCHEME.ARGENTINA
 
   return (
     <svg
@@ -155,6 +175,21 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
         pointerEvents="none"
       />
 
+      {/* ── Selection buffer highlight ───────────────────────────────────────── */}
+      {inSelectionBuffer && (
+        <rect
+          x={1}
+          y={1}
+          width={SIZE - 2}
+          height={SIZE - 2}
+          fill="none"
+          stroke="#E24B4A"
+          strokeWidth="2"
+          strokeDasharray="4 2"
+          pointerEvents="none"
+        />
+      )}
+
       {/* ── Whole-tooth overlays ─────────────────────────────────────────────── */}
       {mark === MARK.CROWN && (
         <circle
@@ -162,33 +197,47 @@ const ToothSVG = ({ fdi, state, onSurfaceClick }: ToothSVGProps) => {
           cy={SIZE / 2}
           r={SIZE / 2 - 2}
           fill="none"
-          stroke={TOOL_COLORS[MARK.CROWN]}
+          stroke={colors[MARK.CROWN]}
           strokeWidth="2.5"
           pointerEvents="none"
         />
       )}
 
       {mark === MARK.EXTRACTION && (
-        <g stroke={TOOL_COLORS[MARK.EXTRACTION]} strokeWidth="2.5" pointerEvents="none">
+        <g stroke={colors[MARK.EXTRACTION]} strokeWidth="2.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>
       )}
 
-      {mark === MARK.ROOTCANAL && (
-        <line
-          x1={SIZE / 2}
-          y1="2"
-          x2={SIZE / 2}
-          y2={SIZE - 2}
-          stroke={TOOL_COLORS[MARK.ROOTCANAL]}
-          strokeWidth="2.5"
-          pointerEvents="none"
-        />
-      )}
+      {/* International: vertical line. Argentina: small "E" letter. */}
+      {mark === MARK.ROOTCANAL &&
+        (isArgentina ? (
+          <text
+            x={SIZE / 2}
+            y={SIZE / 2 + 5}
+            textAnchor="middle"
+            fontSize="14"
+            fontWeight="bold"
+            fill={colors[MARK.ROOTCANAL]}
+            pointerEvents="none"
+          >
+            E
+          </text>
+        ) : (
+          <line
+            x1={SIZE / 2}
+            y1="2"
+            x2={SIZE / 2}
+            y2={SIZE - 2}
+            stroke={colors[MARK.ROOTCANAL]}
+            strokeWidth="2.5"
+            pointerEvents="none"
+          />
+        ))}
 
       {mark === MARK.EXTRACTED && (
-        <g stroke={TOOL_COLORS[MARK.EXTRACTED]} strokeWidth="1.5" pointerEvents="none">
+        <g stroke={colors[MARK.EXTRACTED]} strokeWidth="1.5" pointerEvents="none">
           <line x1="4" y1="4" x2={SIZE - 4} y2={SIZE - 4} />
           <line x1={SIZE - 4} y1="4" x2="4" y2={SIZE - 4} />
         </g>

@@ -4,18 +4,20 @@
  * layouts shared across the odontogram feature.
  *
  * Term mapping (English ↔ dental jargon in Spanish):
- *  - cavity       → caries
- *  - filled       → restauración
- *  - crown        → corona
- *  - extraction   → extracción indicada
- *  - rootcanal    → endodoncia
- *  - extracted    → ausente / extraído
+ *  - cavity               → caries
+ *  - filled               → restauración
+ *  - crown                → corona
+ *  - extraction           → extracción indicada
+ *  - rootcanal            → endodoncia
+ *  - extracted            → ausente / extraído
+ *  - fixed_prosthesis     → prótesis fija
+ *  - removable_prosthesis → prótesis removible
  *
  * These values match the API contract in
  * `@/typing/services/odontogram.interface` — do NOT translate to Spanish.
  */
 
-import type { MarkType } from '@/typing/components/odontogram.types'
+import type { AnnotationScheme, MarkType } from '@/typing/components/odontogram.types'
 
 // ── Clinical marks ────────────────────────────────────────────────────────────
 
@@ -31,35 +33,85 @@ export const MARK = {
   EXTRACTION: 'extraction',
   ROOTCANAL: 'rootcanal',
   EXTRACTED: 'extracted',
+  FIXED_PROSTHESIS: 'fixed_prosthesis',
+  REMOVABLE_PROSTHESIS: 'removable_prosthesis',
 } as const satisfies Record<string, MarkType>
 
-/** All clinical mark tools available in the odontogram, in toolbar order. */
-export const MARK_TYPES: readonly MarkType[] = [
-  MARK.CAVITY,
-  MARK.FILLED,
-  MARK.CROWN,
-  MARK.EXTRACTION,
-  MARK.ROOTCANAL,
-  MARK.EXTRACTED,
-] as const
+/** Annotation scheme identifiers. */
+export const ANNOTATION_SCHEME = {
+  INTERNATIONAL: 'international',
+  ARGENTINA: 'argentina',
+} as const satisfies Record<string, AnnotationScheme>
 
-/** Marks that annotate the entire tooth rather than a single surface. */
+// ── Per-scheme configuration ──────────────────────────────────────────────────
+
+/** Mark tools available in each scheme, in toolbar order. */
+export const SCHEME_MARK_TYPES: Record<AnnotationScheme, readonly MarkType[]> = {
+  international: [
+    MARK.CAVITY,
+    MARK.FILLED,
+    MARK.CROWN,
+    MARK.EXTRACTION,
+    MARK.ROOTCANAL,
+    MARK.EXTRACTED,
+  ],
+  argentina: [
+    MARK.CAVITY,
+    MARK.FILLED,
+    MARK.CROWN,
+    MARK.EXTRACTION,
+    MARK.ROOTCANAL,
+    MARK.EXTRACTED,
+    MARK.FIXED_PROSTHESIS,
+    MARK.REMOVABLE_PROSTHESIS,
+  ],
+}
+
+/** Marks that annotate the entire tooth rather than a single surface (all schemes). */
 export const WHOLE_TOOTH_MARKS: readonly MarkType[] = [
   MARK.CROWN,
   MARK.EXTRACTION,
   MARK.ROOTCANAL,
   MARK.EXTRACTED,
+  MARK.FIXED_PROSTHESIS,
+  MARK.REMOVABLE_PROSTHESIS,
 ] as const
 
-/** Colour assigned to each clinical mark tool (hex, used for SVG fills). */
-export const TOOL_COLORS: Record<MarkType, string> = {
-  [MARK.CAVITY]: '#E24B4A',
-  [MARK.FILLED]: '#185FA5',
-  [MARK.CROWN]: '#BA7517',
-  [MARK.EXTRACTION]: '#5F5E5A',
-  [MARK.ROOTCANAL]: '#639922',
-  [MARK.EXTRACTED]: '#B4B2A9',
+/** Marks that require selecting 2+ teeth before applying. */
+export const MULTI_TOOTH_MARKS: readonly MarkType[] = [
+  MARK.FIXED_PROSTHESIS,
+  MARK.REMOVABLE_PROSTHESIS,
+] as const
+
+/** Colour assigned to each clinical mark tool per scheme (hex, used for SVG fills). */
+export const SCHEME_TOOL_COLORS: Record<AnnotationScheme, Record<MarkType, string>> = {
+  international: {
+    [MARK.CAVITY]: '#E24B4A',
+    [MARK.FILLED]: '#185FA5',
+    [MARK.CROWN]: '#BA7517',
+    [MARK.EXTRACTION]: '#5F5E5A',
+    [MARK.ROOTCANAL]: '#639922',
+    [MARK.EXTRACTED]: '#B4B2A9',
+    [MARK.FIXED_PROSTHESIS]: '#E24B4A',
+    [MARK.REMOVABLE_PROSTHESIS]: '#E24B4A',
+  },
+  argentina: {
+    [MARK.CAVITY]: '#185FA5',
+    [MARK.FILLED]: '#E24B4A',
+    [MARK.CROWN]: '#E24B4A',
+    [MARK.EXTRACTION]: '#185FA5',
+    [MARK.ROOTCANAL]: '#E24B4A',
+    [MARK.EXTRACTED]: '#E24B4A',
+    [MARK.FIXED_PROSTHESIS]: '#E24B4A',
+    [MARK.REMOVABLE_PROSTHESIS]: '#E24B4A',
+  },
 }
+
+/**
+ * Convenience accessor — returns the tool colors for the active scheme.
+ * Kept for backwards-compat with code that previously used `TOOL_COLORS` directly.
+ */
+export const TOOL_COLORS = SCHEME_TOOL_COLORS.international
 
 // ── Metrics colours ───────────────────────────────────────────────────────────
 

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 
 import type {
   ActiveTool,
+  AnnotationScheme,
   DentitionType,
   MarkType,
   OdontogramData,
@@ -12,7 +13,14 @@ import type {
   ToothState,
 } from '@/typing/components/odontogram.types'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
-import { ALL_TEETH, MARK, WHOLE_TOOTH_MARKS } from '@/constants/odontogram'
+import {
+  ALL_TEETH,
+  ANNOTATION_SCHEME,
+  MARK,
+  MULTI_TOOTH_MARKS,
+  SCHEME_MARK_TYPES,
+  WHOLE_TOOTH_MARKS,
+} from '@/constants/odontogram'
 
 /** Build a blank tooth state. */
 const blankTooth = (): ToothState => ({
@@ -36,6 +44,8 @@ const toMarkType = (value: string | undefined): MarkType | null => {
     case MARK.EXTRACTION:
     case MARK.EXTRACTED:
     case MARK.ROOTCANAL:
+    case MARK.FIXED_PROSTHESIS:
+    case MARK.REMOVABLE_PROSTHESIS:
       return value
 
     default:
@@ -82,6 +92,17 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
   }
 
   return result
+}
+
+/** Build a fully blank odontogram. */
+const buildBlankState = (): OdontogramData => {
+  const blank: OdontogramData = {}
+
+  for (const fdi of ALL_TEETH) {
+    blank[fdi] = blankTooth()
+  }
+
+  return blank
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
@@ -147,6 +168,14 @@ export interface UseOdontogramStateReturn {
   dirty: boolean
   /** Computed metrics for the metrics row. */
   metrics: OdontogramMetrics
+  /** Active annotation scheme. */
+  scheme: AnnotationScheme
+  /** FDI numbers in the multi-tooth selection buffer (prosthesis tools). */
+  selectionBuffer: number[]
+  /** True when the active tool requires multi-tooth selection. */
+  isMultiSelectMode: boolean
+  /** True when at least one tooth is in the selection buffer. */
+  canConfirmSelection: boolean
   /** Switch the active tool. */
   setActiveTool: (tool: ActiveTool) => void
   /** Switch dentition. */
@@ -155,42 +184,76 @@ export interface UseOdontogramStateReturn {
   handleSurfaceClick: (fdi: number, surface: Surface) => void
   /** Handle a whole-tooth click for whole-tooth tools. */
   handleToothClick: (fdi: number) => void
+  /** Toggle a tooth in/out of the multi-tooth selection buffer. */
+  toggleToothInBuffer: (fdi: number) => void
+  /** Confirm and apply the multi-tooth mark to all teeth in the buffer. */
+  confirmMultiSelection: () => void
+  /** Discard the current selection buffer without applying anything. */
+  cancelMultiSelection: () => void
   /** Reset all teeth to blank state. */
   clearAll: () => void
   /** Mark the state as saved (resets dirty flag). */
   markSaved: () => void
+  /**
+   * Switch the annotation scheme.
+   * Clears the odontogram state — caller is responsible for showing a
+   * confirmation dialog before invoking this.
+   */
+  applySchemeChange: (nextScheme: AnnotationScheme) => void
 }
 
 /**
- * Manages odontogram UI state. Initial data comes from the API; saves go back
- * to the API via the Guardar button. No localStorage involved.
+ * Manages odontogram UI state including annotation scheme and multi-tooth
+ * selection for prosthesis marks.
  *
- * @param patientId   - UUID of the patient.
- * @param initialData - Pre-fetched odontogram state from the API.
+ * @param patientId     - UUID of the patient.
+ * @param initialData   - Pre-fetched odontogram state from the API.
+ * @param initialScheme - Annotation scheme from the doctor's settings.
  * @returns State and action handlers for the odontogram UI.
  */
 export const useOdontogramState = (
   patientId: string,
-  initialData: OdontogramState | null
+  initialData: OdontogramState | null,
+  initialScheme: AnnotationScheme = ANNOTATION_SCHEME.INTERNATIONAL
 ): UseOdontogramStateReturn => {
   const [teeth, setTeeth] = useState<OdontogramData>(() => buildInitialState(initialData))
 
   const [dirty, setDirty] = useState(false)
 
-  const [activeTool, setActiveTool] = useState<ActiveTool>(MARK.CAVITY)
+  const [activeTool, setActiveToolState] = useState<ActiveTool>(SCHEME_MARK_TYPES[initialScheme][0])
 
   const [dentition, setDentition] = useState<DentitionType>('permanent')
 
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
 
+  const [scheme, setScheme] = useState<AnnotationScheme>(initialScheme)
+
+  const [selectionBuffer, setSelectionBuffer] = useState<number[]>([])
+
+  const isMultiSelectMode = MULTI_TOOTH_MARKS.includes(activeTool as MarkType)
+
+  const canConfirmSelection = selectionBuffer.length >= 1
+
+  const setActiveTool = useCallback(
+    (tool: ActiveTool) => {
+      // Discard any active buffer when switching tools
+      if (selectionBuffer.length > 0) setSelectionBuffer([])
+
+      setActiveToolState(tool)
+    },
+    [selectionBuffer.length]
+  )
+
   const handleSurfaceClick = useCallback(
     (fdi: number, surface: Surface) => {
+      if (MULTI_TOOTH_MARKS.includes(activeTool as MarkType)) return
+
       setSelectedTooth(fdi)
 
       setTeeth(prev => {
         const current = prev[fdi] ?? blankTooth()
 
-        if (WHOLE_TOOTH_MARKS.includes(activeTool)) {
+        if (WHOLE_TOOTH_MARKS.includes(activeTool as MarkType)) {
           const newMark = current.mark === activeTool ? null : activeTool
 
           return { ...prev, [fdi]: { ...current, mark: newMark } }
@@ -216,6 +279,8 @@ export const useOdontogramState = (
 
   const handleToothClick = useCallback(
     (fdi: number) => {
+      if (MULTI_TOOTH_MARKS.includes(activeTool as MarkType)) return
+
       setSelectedTooth(fdi)
 
       setTeeth(prev => {
@@ -231,22 +296,64 @@ export const useOdontogramState = (
     [activeTool]
   )
 
+  const toggleToothInBuffer = useCallback((fdi: number) => {
+    setSelectionBuffer(prev =>
+      prev.includes(fdi) ? prev.filter(id => id !== fdi) : [...prev, fdi]
+    )
+
+    setSelectedTooth(fdi)
+  }, [])
+
+  const confirmMultiSelection = useCallback(() => {
+    if (selectionBuffer.length < 1) return
+
+    const mark = activeTool as MarkType
+
+    setTeeth(prev => {
+      const next = { ...prev }
+
+      for (const fdi of selectionBuffer) {
+        const current = next[fdi] ?? blankTooth()
+
+        next[fdi] = { ...current, mark }
+      }
+
+      return next
+    })
+
+    setSelectionBuffer([])
+
+    setDirty(true)
+  }, [activeTool, selectionBuffer])
+
+  const cancelMultiSelection = useCallback(() => {
+    setSelectionBuffer([])
+  }, [])
+
   const clearAll = useCallback(() => {
-    const blank: OdontogramData = {}
-
-    for (const fdi of ALL_TEETH) {
-      blank[fdi] = blankTooth()
-    }
-
-    setTeeth(blank)
+    setTeeth(buildBlankState())
 
     setSelectedTooth(null)
+
+    setSelectionBuffer([])
 
     setDirty(true)
   }, [])
 
   const markSaved = useCallback(() => {
     setDirty(false)
+  }, [])
+
+  const applySchemeChange = useCallback((nextScheme: AnnotationScheme) => {
+    // Only the visual interpretation changes — teeth data is never touched.
+    // Reset the active tool to the first one available in the new scheme.
+    const firstTool = SCHEME_MARK_TYPES[nextScheme][0]
+
+    setScheme(nextScheme)
+
+    setActiveToolState(firstTool)
+
+    setSelectionBuffer([])
   }, [])
 
   const metrics = computeMetrics(teeth)
@@ -258,11 +365,19 @@ export const useOdontogramState = (
     selectedTooth,
     dirty,
     metrics,
+    scheme,
+    selectionBuffer,
+    isMultiSelectMode,
+    canConfirmSelection,
     setActiveTool,
     setDentition,
     handleSurfaceClick,
     handleToothClick,
+    toggleToothInBuffer,
+    confirmMultiSelection,
+    cancelMultiSelection,
     clearAll,
     markSaved,
+    applySchemeChange,
   }
 }

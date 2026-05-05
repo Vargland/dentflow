@@ -22,6 +22,7 @@ export default async function AppointmentsPage() {
     clinicAddress: '',
     clinicPhone: '',
     emailLanguage: 'es',
+    annotationScheme: 'international',
   }))
 
   return (

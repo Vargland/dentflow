@@ -529,6 +529,9 @@ export const CalendarView = ({ settings }: CalendarViewProps) => {
         <AppointmentDetailModal
           appointment={detailing}
           timezone={timezone}
+          annotationScheme={
+            (settings.annotationScheme ?? 'international') as 'international' | 'argentina'
+          }
           onClose={closeDetail}
           onUpdated={() => {
             closeDetail()
