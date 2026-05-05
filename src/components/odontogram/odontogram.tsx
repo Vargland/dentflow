@@ -26,7 +26,10 @@ import {
 } from '@/constants/odontogram'
 import { saveOdontogram } from '@/services/odontogram.service'
 
-import ProsthesisOverlay, { PROSTHESIS_ROW_PADDING_TOP } from './prosthesis-overlay'
+import ProsthesisOverlay, {
+  PROSTHESIS_ROW_PADDING_BOTTOM,
+  PROSTHESIS_ROW_PADDING_TOP,
+} from './prosthesis-overlay'
 import ToothSVG from './tooth-svg'
 import { useOdontogramState } from './use-odontogram-state'
 
@@ -123,7 +126,8 @@ const ToothRow = ({
         className="relative flex gap-1"
         style={{
           width: rowWidth,
-          ...(hasProsthesis ? { paddingTop: PROSTHESIS_ROW_PADDING_TOP } : {}),
+          ...(hasProsthesis && isUpper ? { paddingTop: PROSTHESIS_ROW_PADDING_TOP } : {}),
+          ...(hasProsthesis && !isUpper ? { paddingBottom: PROSTHESIS_ROW_PADDING_BOTTOM } : {}),
         }}
       >
         {hasProsthesis && fixedSet.size > 0 && (
@@ -132,6 +136,7 @@ const ToothRow = ({
             teethWithMark={fixedSet}
             markType="fixed_prosthesis"
             rowWidth={rowWidth}
+            isUpper={isUpper}
           />
         )}
 
@@ -141,6 +146,7 @@ const ToothRow = ({
             teethWithMark={removableSet}
             markType="removable_prosthesis"
             rowWidth={rowWidth}
+            isUpper={isUpper}
           />
         )}
 

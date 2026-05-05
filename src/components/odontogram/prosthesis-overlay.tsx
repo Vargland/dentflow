@@ -10,17 +10,22 @@ const TOOTH_SIZE = 40
 /** gap-1 in Tailwind = 4px between teeth. */
 const GAP = 4
 
-/** Extra padding-top added to ToothRow to make room for the bracket. */
-export const PROSTHESIS_ROW_PADDING_TOP = 10
+/** Extra padding added to ToothRow to make room for the bracket (top or bottom). */
+export const PROSTHESIS_ROW_PADDING_TOP = 6
+
+export const PROSTHESIS_ROW_PADDING_BOTTOM = 14
 
 /** How far above the tooth the bracket arm reaches (px, relative to row top). */
-const BRACKET_Y = 4
+const BRACKET_Y = 2
 
-/** How far down from the bracket arm the side legs drop. */
-const BRACKET_LEG = 6
+/** Leg length for fixed prosthesis (reaches ~2/3 of tooth height). */
+const BRACKET_LEG_FIXED = PROSTHESIS_ROW_PADDING_TOP + TOOTH_SIZE / 1.5
+
+/** Leg length for removable prosthesis (short hook, ~1/4 of tooth height). */
+const BRACKET_LEG_REMOVABLE = PROSTHESIS_ROW_PADDING_TOP + TOOTH_SIZE / 4
 
 /** Horizontal margin beyond the tooth edge on each side. */
-const BRACKET_MARGIN = 3
+const BRACKET_MARGIN = 2
 
 /** Prosthesis stroke colour. */
 const COLOR = '#E24B4A'
@@ -86,6 +91,8 @@ interface ProsthesisOverlayProps {
   markType: typeof MARK.FIXED_PROSTHESIS | typeof MARK.REMOVABLE_PROSTHESIS
   /** Total pixel width of the row container. Derived from rowFdis.length. */
   rowWidth: number
+  /** True for upper arch rows (bracket above), false for lower (bracket below). */
+  isUpper: boolean
 }
 
 /**
@@ -108,6 +115,7 @@ const ProsthesisOverlay = ({
   teethWithMark,
   markType,
   rowWidth,
+  isUpper,
 }: ProsthesisOverlayProps) => {
   const groups = buildGroups(rowFdis, teethWithMark)
 
@@ -123,15 +131,15 @@ const ProsthesisOverlay = ({
     ...(isDashed ? { strokeDasharray: '6 3' } : {}),
   }
 
-  const svgHeight = PROSTHESIS_ROW_PADDING_TOP + TOOTH_SIZE
+  const legLength = isDashed ? BRACKET_LEG_REMOVABLE : BRACKET_LEG_FIXED
 
   return (
     <svg
       width={rowWidth}
-      height={svgHeight}
+      height={TOOTH_SIZE}
       style={{
         position: 'absolute',
-        top: 0,
+        top: isUpper ? 0 : TOOTH_SIZE,
         left: 0,
         pointerEvents: 'none',
         overflow: 'visible',
@@ -146,20 +154,24 @@ const ProsthesisOverlay = ({
 
         const xRight = toothCenterX(lastIdx) + TOOTH_SIZE / 2 + BRACKET_MARGIN
 
-        const yArm = BRACKET_Y
+        // Upper: arm at top (y=BRACKET_Y), legs go down toward tooth.
+        // Lower: arm at bottom, legs go up toward tooth (SVG is below the tooth row).
+        const yArm = isUpper ? BRACKET_Y : legLength
 
-        const yLeg = BRACKET_Y + BRACKET_LEG
+        const yLeg = isUpper ? yArm + legLength : BRACKET_Y
 
         const key = group.join('-')
 
         return (
           <g key={key}>
-            {/* Top horizontal arm */}
+            {/* Horizontal arm */}
             <line x1={xLeft} y1={yArm} x2={xRight} y2={yArm} {...strokeProps} />
             {/* Left leg */}
             <line x1={xLeft} y1={yArm} x2={xLeft} y2={yLeg} {...strokeProps} />
             {/* Right leg */}
             <line x1={xRight} y1={yArm} x2={xRight} y2={yLeg} {...strokeProps} />
+            {/* Closing arm — fixed prosthesis only */}
+            {!isDashed && <line x1={xLeft} y1={yLeg} x2={xRight} y2={yLeg} {...strokeProps} />}
           </g>
         )
       })}
