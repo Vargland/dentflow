@@ -13,6 +13,9 @@ const GAP = 4
 /** Extra padding added to ToothRow to make room for the bracket (top or bottom). */
 export const PROSTHESIS_ROW_PADDING_TOP = 6
 
+/** Height of the FDI number label + gap below the tooth SVG in lower rows (px). */
+export const LOWER_LABEL_HEIGHT = 16
+
 export const PROSTHESIS_ROW_PADDING_BOTTOM = 14
 
 /** How far above the tooth the bracket arm reaches (px, relative to row top). */
@@ -139,7 +142,7 @@ const ProsthesisOverlay = ({
       height={TOOTH_SIZE}
       style={{
         position: 'absolute',
-        top: isUpper ? 0 : TOOTH_SIZE,
+        top: isUpper ? 0 : TOOTH_SIZE + LOWER_LABEL_HEIGHT,
         left: 0,
         pointerEvents: 'none',
         overflow: 'visible',
@@ -154,11 +157,19 @@ const ProsthesisOverlay = ({
 
         const xRight = toothCenterX(lastIdx) + TOOTH_SIZE / 2 + BRACKET_MARGIN
 
-        // Upper: arm at top (y=BRACKET_Y), legs go down toward tooth.
-        // Lower: arm at bottom, legs go up toward tooth (SVG is below the tooth row).
-        const yArm = isUpper ? BRACKET_Y : legLength
+        // Upper: SVG at top:0. arm at BRACKET_Y, legs go down into the tooth. ✓
+        // Lower: SVG at top:TOOTH_SIZE+LOWER_LABEL_HEIGHT (just below the number label).
+        //   The rectangle must cover the label and reach halfway up the tooth.
+        //   Negative y values draw upward from the anchor (over the label, into the tooth).
+        //   For fixed:     reach into ~half the tooth → tooth penetration = TOOTH_SIZE/2
+        //   For removable: short hook                  → tooth penetration = TOOTH_SIZE/4
+        //   yArm = -BRACKET_Y                                      → bottom line of rect
+        //   yLeg = -(LOWER_LABEL_HEIGHT + toothPenetration)        → top line of rect
+        const toothPenetration = isDashed ? TOOTH_SIZE / 4 : TOOTH_SIZE / 2
 
-        const yLeg = isUpper ? yArm + legLength : BRACKET_Y
+        const yArm = isUpper ? BRACKET_Y : -BRACKET_Y
+
+        const yLeg = isUpper ? BRACKET_Y + legLength : -(LOWER_LABEL_HEIGHT + toothPenetration)
 
         const key = group.join('-')
 
