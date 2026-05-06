@@ -53,6 +53,7 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
       antecedentes: (fd.get('antecedentes') as string) ?? '',
       obraSocial: (fd.get('obraSocial') as string) || undefined,
       nroAfiliado: (fd.get('nroAfiliado') as string) || undefined,
+      planNumber: (fd.get('planNumber') as string) || undefined,
       notas: (fd.get('notas') as string) || undefined,
     }
 
@@ -134,6 +135,10 @@ const PatientForm = ({ patient, onSubmit, pending = false }: PatientFormProps) =
           <div className="space-y-1.5">
             <Label htmlFor="nroAfiliado">{t('patientForm.fields.memberId')}</Label>
             <Input id="nroAfiliado" name="nroAfiliado" defaultValue={patient?.nroAfiliado ?? ''} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="planNumber">{t('patientForm.fields.planNumber')}</Label>
+            <Input id="planNumber" name="planNumber" defaultValue={patient?.planNumber ?? ''} />
           </div>
         </div>
       </div>
