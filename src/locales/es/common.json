@@ -81,6 +81,7 @@
       "address": "Direccion",
       "insuranceProvider": "Obra social",
       "memberId": "Nro de afiliado",
+      "planNumber": "Nro de plan",
       "allergies": "Alergias",
       "allergiesPlaceholder": "Medicamentos, alimentos, materiales...",
       "medications": "Medicamentos actuales",
@@ -187,7 +188,8 @@
     "editedAt": "Editado el {{date}}",
     "markPaid": "Marcar como pagado",
     "markPending": "Marcar como pendiente",
-    "amountPlaceholder": "Importe"
+    "amountPlaceholder": "Importe",
+    "appointmentDate": "Fecha del turno"
   },
   "appointmentDetail": {
     "tabs": {

@@ -32,6 +32,11 @@ const formatDate = (dateStr: string, lang: string) =>
   })
 
 /**
+ * Returns today's date as a YYYY-MM-DD string for the date input default value.
+ */
+const todayISO = (): string => new Date().toISOString().slice(0, 10)
+
+/**
  * Returns true when updatedAt is meaningfully later than createdAt
  * (more than 5 seconds apart, to ignore DB timestamp noise).
  */
@@ -54,34 +59,52 @@ interface EvolutionCardProps {
   isEditing: boolean
   /** Draft description text while editing. */
   editText: string
+  /** Draft date (YYYY-MM-DD) while editing. */
+  editDate: string
+  /** Draft amount while editing (empty string = no amount). */
+  editImporte: string
   /** Whether a save request is in flight for this card. */
   isSaving: boolean
+  /** Whether a paid-toggle request is in flight for this card. */
+  isTogglingPaid: boolean
   /** Called when the user clicks the pencil icon. */
   onEditStart: (ev: Evolution) => void
   /** Called when draft text changes. */
   onEditChange: (text: string) => void
+  /** Called when draft date changes. */
+  onDateChange: (date: string) => void
+  /** Called when draft amount changes. */
+  onImporteChange: (value: string) => void
   /** Called when the user confirms the edit. */
   onEditSave: (ev: Evolution) => void
   /** Called when the user cancels the edit. */
   onEditCancel: () => void
+  /** Called when the user toggles the paid status. */
+  onTogglePaid: (ev: Evolution) => void
 }
 
 // ── Sub-component ─────────────────────────────────────────────────────────────
 
 /**
  * Expanded body of one evolution card — description (editable), teeth, amount,
- * and an "edited at" note when the record has been modified after creation.
+ * paid toggle, and an "edited at" note when the record has been modified after creation.
  */
 const EvolutionCard = ({
   ev,
   lang,
   isEditing,
   editText,
+  editDate,
+  editImporte,
   isSaving,
+  isTogglingPaid,
   onEditStart,
   onEditChange,
+  onDateChange,
+  onImporteChange,
   onEditSave,
   onEditCancel,
+  onTogglePaid,
 }: EvolutionCardProps) => {
   const { t } = useTranslation()
 
@@ -89,9 +112,35 @@ const EvolutionCard = ({
 
   return (
     <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
-      {/* Description — inline editable */}
+      {/* Description + date + amount — inline editable */}
       {isEditing ? (
         <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">{t('records.appointmentDate')}</Label>
+              <Input
+                type="date"
+                value={editDate}
+                onChange={event => onDateChange(event.target.value)}
+                className="text-sm h-8"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">{t('records.amount')}</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editImporte}
+                  onChange={event => onImporteChange(event.target.value)}
+                  className="text-sm h-8 pl-7"
+                  placeholder={t('records.amountPlaceholder')}
+                />
+              </div>
+            </div>
+          </div>
           <Textarea
             value={editText}
             onChange={event => onEditChange(event.target.value)}
@@ -143,15 +192,52 @@ const EvolutionCard = ({
         </div>
       )}
 
-      {/* Amount + paid status */}
+      {/* Amount + paid toggle */}
       {ev.importe !== null && !isEditing && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t('records.amount')}: <span className="font-medium">${ev.importe.toLocaleString()}</span>
-          {' — '}
-          <span className={ev.pagado ? 'text-green-600' : 'text-orange-500'}>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t('records.amount')}:{' '}
+            <span className="font-medium">${ev.importe.toLocaleString()}</span>
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isTogglingPaid}
+            onClick={() => onTogglePaid(ev)}
+            className={cn(
+              'h-6 text-xs px-2 gap-1',
+              ev.pagado
+                ? 'border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400'
+                : 'border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400'
+            )}
+          >
+            {isTogglingPaid && <Loader2 className="h-3 w-3 animate-spin" />}
             {ev.pagado ? t('records.paid') : t('records.pending')}
-          </span>
-        </p>
+          </Button>
+        </div>
+      )}
+
+      {/* Paid toggle when no amount */}
+      {ev.importe === null && !isEditing && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isTogglingPaid}
+            onClick={() => onTogglePaid(ev)}
+            className={cn(
+              'h-6 text-xs px-2 gap-1',
+              ev.pagado
+                ? 'border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400'
+                : 'border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400'
+            )}
+          >
+            {isTogglingPaid && <Loader2 className="h-3 w-3 animate-spin" />}
+            {ev.pagado ? t('records.paid') : t('records.pending')}
+          </Button>
+        </div>
       )}
 
       {/* Edited note */}
@@ -168,7 +254,8 @@ const EvolutionCard = ({
 
 /**
  * Renders the clinical evolution history for a patient and provides
- * a form to add new records. Supports inline editing of existing records.
+ * a form to add new records. Supports inline editing of existing records
+ * and one-click paid status toggling.
  *
  * @param patientId  - UUID of the patient.
  * @param evolutions - Pre-fetched list of evolutions (SSR).
@@ -189,7 +276,13 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
   const [editingEvText, setEditingEvText] = useState('')
 
+  const [editingEvDate, setEditingEvDate] = useState('')
+
+  const [editingEvImporte, setEditingEvImporte] = useState('')
+
   const [savingEvId, setSavingEvId] = useState<string | null>(null)
+
+  const [togglingPaidId, setTogglingPaidId] = useState<string | null>(null)
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -213,11 +306,17 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
     const importe = importeRaw ? Number(importeRaw) : undefined
 
+    const fechaRaw = fd.get('fecha') as string
+
+    const pagadoRaw = fd.get('pagado') as string
+
     startTransition(async () => {
       const created = await createEvolution(token, patientId, {
         descripcion: fd.get('descripcion') as string,
         dientes,
         importe,
+        pagado: pagadoRaw === 'on',
+        fecha: fechaRaw || undefined,
       })
 
       setEvolutions(prev => [created, ...prev])
@@ -242,6 +341,10 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
     setEditingEvText(ev.descripcion)
 
+    setEditingEvDate(ev.fecha.slice(0, 10))
+
+    setEditingEvImporte(ev.importe !== null ? String(ev.importe) : '')
+
     setExpanded(ev.id)
   }
 
@@ -260,7 +363,11 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
         token,
         patientId,
         evolutionId: ev.id,
-        input: { descripcion: editingEvText.trim() },
+        input: {
+          descripcion: editingEvText.trim(),
+          fecha: editingEvDate || undefined,
+          importe: editingEvImporte !== '' ? Number(editingEvImporte) : undefined,
+        },
       })
 
       setEvolutions(prev =>
@@ -268,6 +375,10 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
       )
 
       setEditingEvId(null)
+
+      setEditingEvDate('')
+
+      setEditingEvImporte('')
 
       toast.success(t('records.updated'))
     } catch {
@@ -277,7 +388,53 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
     }
   }
 
-  const handleEditCancel = () => setEditingEvId(null)
+  const handleEditCancel = () => {
+    setEditingEvId(null)
+
+    setEditingEvDate('')
+
+    setEditingEvImporte('')
+  }
+
+  /**
+   * Toggles the paid status of an evolution with a single API call.
+   *
+   * @param ev - The evolution whose paid status to toggle.
+   */
+  const handleTogglePaid = async (ev: Evolution) => {
+    if (togglingPaidId === ev.id) return
+
+    setTogglingPaidId(ev.id)
+
+    setEvolutions(prev =>
+      prev.map(evolution =>
+        evolution.id === ev.id ? { ...evolution, pagado: !evolution.pagado } : evolution
+      )
+    )
+
+    try {
+      const updated = await updateEvolution({
+        token,
+        patientId,
+        evolutionId: ev.id,
+        input: { pagado: !ev.pagado },
+      })
+
+      setEvolutions(prev =>
+        prev.map(evolution => (evolution.id === updated.id ? updated : evolution))
+      )
+    } catch {
+      setEvolutions(prev =>
+        prev.map(evolution =>
+          evolution.id === ev.id ? { ...evolution, pagado: ev.pagado } : evolution
+        )
+      )
+
+      toast.error(t('appointmentDetail.evolutionError'))
+    } finally {
+      setTogglingPaidId(null)
+    }
+  }
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -317,10 +474,16 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
+              <Label htmlFor="fecha">{t('records.appointmentDate')}</Label>
+              <Input id="fecha" name="fecha" type="date" defaultValue={todayISO()} />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="dientes">{t('records.teethTreated')}</Label>
               <Input id="dientes" name="dientes" placeholder={t('records.teethPlaceholder')} />
               <p className="text-xs text-gray-500 dark:text-gray-400">{t('records.teethHint')}</p>
             </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="importe">{t('records.amount')}</Label>
               <div className="relative">
@@ -332,9 +495,20 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
                   min="0"
                   step="0.01"
                   className="pl-8"
-                  placeholder="0.00"
+                  placeholder={t('records.amountPlaceholder')}
                 />
               </div>
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                id="pagado"
+                name="pagado"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <Label htmlFor="pagado" className="cursor-pointer">
+                {t('records.paid')}
+              </Label>
             </div>
           </div>
           <div className="flex justify-end">
@@ -415,11 +589,17 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
                   lang={i18n.language}
                   isEditing={editingEvId === ev.id}
                   editText={editingEvText}
+                  editDate={editingEvDate}
+                  editImporte={editingEvImporte}
                   isSaving={savingEvId === ev.id}
+                  isTogglingPaid={togglingPaidId === ev.id}
                   onEditStart={handleEditStart}
                   onEditChange={setEditingEvText}
+                  onDateChange={setEditingEvDate}
+                  onImporteChange={setEditingEvImporte}
                   onEditSave={handleEditSave}
                   onEditCancel={handleEditCancel}
+                  onTogglePaid={handleTogglePaid}
                 />
               )}
             </div>
