@@ -112,7 +112,7 @@ const EvolutionCard = ({
 
   return (
     <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
-      {/* Description + date — inline editable */}
+      {/* Description + date + amount — inline editable */}
       {isEditing ? (
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-3">
@@ -376,6 +376,10 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
       setEditingEvId(null)
 
+      setEditingEvDate('')
+
+      setEditingEvImporte('')
+
       toast.success(t('records.updated'))
     } catch {
       toast.error(t('appointmentDetail.evolutionError'))
@@ -402,7 +406,6 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
 
     setTogglingPaidId(ev.id)
 
-    // Optimistic update
     setEvolutions(prev =>
       prev.map(evolution =>
         evolution.id === ev.id ? { ...evolution, pagado: !evolution.pagado } : evolution
@@ -421,7 +424,6 @@ const EvolutionList = ({ patientId, evolutions: initial, token }: EvolutionListP
         prev.map(evolution => (evolution.id === updated.id ? updated : evolution))
       )
     } catch {
-      // Revert optimistic update on error
       setEvolutions(prev =>
         prev.map(evolution =>
           evolution.id === ev.id ? { ...evolution, pagado: ev.pagado } : evolution
