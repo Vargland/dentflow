@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Mail, MapPin, Pencil, Phone, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Mail, MapPin, Pencil, Phone } from 'lucide-react'
 
 import type { AnnotationScheme } from '@/typing/components/odontogram.types'
 import type { PatientPageParams } from '@/typing/pages/patients.types'
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Odontogram from '@/components/odontogram/odontogram'
+import InsuranceBadge from '@/components/patients/insurance-badge'
 import { ApiError } from '@/services/api-client'
 import { getSettings } from '@/services/appointments.service'
 import { getEvolutions } from '@/services/evolution.service'
@@ -89,14 +90,11 @@ export default async function PatientPage({ params }: PatientPageParams) {
               {age !== null && (
                 <Badge variant="secondary">{t('patientDetail.yearsOld', { age })}</Badge>
               )}
-              {patient.obraSocial && (
-                <Badge variant="outline" className="gap-1">
-                  <ShieldCheck className="h-3 w-3" />
-                  {patient.obraSocial}
-                  {patient.nroAfiliado && ` - ${patient.nroAfiliado}`}
-                  {patient.planNumber && ` (${patient.planNumber})`}
-                </Badge>
-              )}
+              <InsuranceBadge
+                obraSocial={patient.obraSocial}
+                nroAfiliado={patient.nroAfiliado}
+                planNumber={patient.planNumber}
+              />
             </div>
           </div>
         </div>

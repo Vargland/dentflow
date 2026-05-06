@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import type { Patient } from '@/typing/services/patient.interface'
 import type { CreatePatientInput } from '@/typing/services/patient.interface'
+import { useTranslation } from '@/lib/i18n/client'
 import { updatePatient } from '@/services/patients.service'
 
 import PatientForm from '../../../_components/patient-form'
@@ -19,6 +20,8 @@ import PatientForm from '../../../_components/patient-form'
 const EditPatientForm = ({ patient, token }: { patient: Patient; token: string }) => {
   const router = useRouter()
 
+  const { t } = useTranslation()
+
   const [pending, setPending] = useState(false)
 
   const handleSubmit = async (data: CreatePatientInput) => {
@@ -27,10 +30,12 @@ const EditPatientForm = ({ patient, token }: { patient: Patient; token: string }
     try {
       await updatePatient(token, patient.id, data)
 
-      router.push(`/patients/${patient.id}`)
+      router.refresh()
+
+      toast.success(t('patientForm.actions.saved'))
     } catch {
       toast.error('Failed to update patient. Please try again.')
-
+    } finally {
       setPending(false)
     }
   }

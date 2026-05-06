@@ -34,6 +34,7 @@ import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import InsuranceBadge from '@/components/patients/insurance-badge'
 import { updateAppointment } from '@/services/appointments.service'
 import { createEvolution, getEvolutions, updateEvolution } from '@/services/evolution.service'
 import { getPatient } from '@/services/patients.service'
@@ -598,11 +599,11 @@ const PatientPanel = ({
             <span className="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">
               {appointment.title}
             </span>
-            {patient.obraSocial && (
-              <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                {patient.obraSocial}
-              </span>
-            )}
+            <InsuranceBadge
+              obraSocial={patient.obraSocial}
+              nroAfiliado={patient.nroAfiliado}
+              planNumber={patient.planNumber}
+            />
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5">
