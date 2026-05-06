@@ -40,6 +40,7 @@ export interface UserSettings {
   clinicAddress: string
   clinicPhone: string
   emailLanguage: string
+  annotationScheme: string
 }
 
 /** Input for PUT /settings. */
@@ -49,4 +50,5 @@ export interface UpdateSettingsInput {
   clinicAddress: string
   clinicPhone: string
   emailLanguage: string
+  annotationScheme: string
 }

@@ -26,6 +26,7 @@ export default async function SettingsPage() {
     clinicAddress: '',
     clinicPhone: '',
     emailLanguage: 'es',
+    annotationScheme: 'international',
   }))
 
   return (

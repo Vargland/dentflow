@@ -141,7 +141,24 @@
       "crown": "Corona",
       "extraction": "Extraccion",
       "rootcanal": "Endodoncia",
-      "extracted": "Ausente"
+      "extracted": "Ausente",
+      "fixed_prosthesis": "Protesis fija",
+      "removable_prosthesis": "Protesis removible"
+    },
+    "schemeSelector": {
+      "label": "Esquema de anotacion",
+      "international": "Internacional",
+      "argentina": "Argentina"
+    },
+    "confirmSchemeChangeTitle": "Cambiar esquema de anotacion",
+    "confirmSchemeChange": "Cambiar el esquema borrara las anotaciones actuales. Continuar?",
+    "multiSelect": {
+      "hint": "Hace click en los dientes para seleccionarlos",
+      "selected_one": "{{count}} diente seleccionado",
+      "selected_other": "{{count}} dientes seleccionados",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "nonAdjacentError": "La protesis fija requiere dientes contiguos"
     }
   },
   "records": {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from 'lucide-react'
 
+import type { AnnotationScheme } from '@/typing/components/odontogram.types'
 import type { Appointment } from '@/typing/services/appointment.interface'
 import type { OdontogramState } from '@/typing/services/odontogram.interface'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -23,6 +24,8 @@ export interface DashboardShellProps {
   initialAppointments: Appointment[]
   /** Doctor's IANA timezone. */
   timezone: string
+  /** Doctor's preferred annotation scheme for the odontogram. */
+  annotationScheme: AnnotationScheme
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -34,7 +37,11 @@ export interface DashboardShellProps {
  * @param initialAppointments - Server-fetched appointments for today.
  * @param timezone            - Doctor's IANA timezone for time display.
  */
-const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) => {
+const DashboardShell = ({
+  initialAppointments,
+  timezone,
+  annotationScheme,
+}: DashboardShellProps) => {
   const { data: session } = useSession()
 
   const token = (session?.accessToken as string) ?? ''
@@ -277,6 +284,7 @@ const DashboardShell = ({ initialAppointments, timezone }: DashboardShellProps) 
                 patientId={odontogramPatientId}
                 initialData={odontogramData}
                 token={token}
+                initialScheme={annotationScheme}
               />
             )}
           </DialogContent>

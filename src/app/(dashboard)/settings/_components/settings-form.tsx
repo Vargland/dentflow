@@ -64,6 +64,10 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
 
   const [emailLanguage, setEmailLanguage] = useState(initialSettings.emailLanguage || 'es')
 
+  const [annotationScheme, setAnnotationScheme] = useState(
+    initialSettings.annotationScheme || 'international'
+  )
+
   const [calendarConnected, setCalendarConnected] = useState(initialSettings.calendarConnected)
 
   const [calendarEmail, setCalendarEmail] = useState(initialSettings.calendarEmail ?? '')
@@ -84,6 +88,7 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
         clinicAddress,
         clinicPhone,
         emailLanguage,
+        annotationScheme,
       })
 
       setSaved(true)
@@ -162,6 +167,26 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
               <SelectContent>
                 <SelectItem value="es">{t('settings.emailLanguageEs')}</SelectItem>
                 <SelectItem value="en">{t('settings.emailLanguageEn')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="annotation-scheme">{t('odontogram.schemeSelector.label')}</Label>
+            <Select
+              value={annotationScheme}
+              onValueChange={value => setAnnotationScheme(value ?? annotationScheme)}
+            >
+              <SelectTrigger id="annotation-scheme" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="international">
+                  {t('odontogram.schemeSelector.international')}
+                </SelectItem>
+                <SelectItem value="argentina">
+                  {t('odontogram.schemeSelector.argentina')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
