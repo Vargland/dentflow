@@ -122,6 +122,10 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
 
   let healthy = 0
 
+  let fixedProsthesis = 0
+
+  let removableProsthesis = 0
+
   for (const fdi of ALL_TEETH) {
     const tooth = state[fdi]
 
@@ -133,6 +137,18 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
 
     if (tooth.mark === MARK.EXTRACTED) {
       missing++
+
+      continue
+    }
+
+    if (tooth.mark === MARK.FIXED_PROSTHESIS) {
+      fixedProsthesis++
+
+      continue
+    }
+
+    if (tooth.mark === MARK.REMOVABLE_PROSTHESIS) {
+      removableProsthesis++
 
       continue
     }
@@ -149,7 +165,7 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
     else if (!hasAnyMark) healthy++
   }
 
-  return { cavities, fillings, missing, healthy }
+  return { cavities, fillings, missing, healthy, fixedProsthesis, removableProsthesis }
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
