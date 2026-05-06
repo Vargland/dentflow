@@ -94,6 +94,7 @@ export default async function PatientPage({ params }: PatientPageParams) {
                   <ShieldCheck className="h-3 w-3" />
                   {patient.obraSocial}
                   {patient.nroAfiliado && ` - ${patient.nroAfiliado}`}
+                  {patient.planNumber && ` (${patient.planNumber})`}
                 </Badge>
               )}
             </div>

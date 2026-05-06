@@ -19,6 +19,7 @@ export interface Patient {
   antecedentes: string | null
   obraSocial: string | null
   nroAfiliado: string | null
+  planNumber: string | null
   notas: string | null
   odontograma: Record<string, unknown> | null
   createdAt: string
@@ -52,6 +53,7 @@ export interface CreatePatientInput {
   antecedentes?: string
   obraSocial?: string
   nroAfiliado?: string
+  planNumber?: string
   notas?: string
 }
 
