@@ -22,7 +22,16 @@ export interface CreateEvolutionInput {
   dientes?: number[]
   importe?: number
   pagado?: boolean
+  /** Optional ISO date string (YYYY-MM-DD). Defaults to today server-side. */
+  fecha?: string
 }
 
 /** Request body for PUT /patients/:id/evolutions/:eid. */
-export type UpdateEvolutionInput = Partial<CreateEvolutionInput>
+export interface UpdateEvolutionInput {
+  descripcion?: string
+  dientes?: number[]
+  importe?: number
+  pagado?: boolean
+  /** Optional ISO date string (YYYY-MM-DD). */
+  fecha?: string
+}
