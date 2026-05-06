@@ -81,6 +81,7 @@
       "address": "Address",
       "insuranceProvider": "Insurance provider",
       "memberId": "Member ID",
+      "planNumber": "Plan number",
       "allergies": "Allergies",
       "allergiesPlaceholder": "Medications, foods, materials...",
       "medications": "Current medications",
