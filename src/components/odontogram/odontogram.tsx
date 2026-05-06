@@ -304,9 +304,6 @@ const Odontogram = ({ patientId, initialData, token, initialScheme }: Odontogram
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-4">
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 shrink-0">
-          {t(`odontogram.schemeSelector.${scheme}`)}
-        </span>
         {markTypes.map(tool => (
           <button
             key={tool}
@@ -384,6 +381,12 @@ const Odontogram = ({ patientId, initialData, token, initialScheme }: Odontogram
             {t(`odontogram.${dentitionOption}`)}
           </button>
         ))}
+        <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+          {t('odontogram.schemeSelector.label')}:{' '}
+          <span className="font-medium text-gray-600 dark:text-gray-300">
+            {t(`odontogram.schemeSelector.${scheme}`)}
+          </span>
+        </span>
       </div>
 
       {/* ── Main layout: odontogram + right panel ───────────────────────────── */}
@@ -518,14 +521,24 @@ const Odontogram = ({ patientId, initialData, token, initialScheme }: Odontogram
         </aside>
       </div>
 
-      {/* ── Metrics row ─────────────────────────────────────────────────────── */}
-      <div className="flex gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
+      {/* ── Metrics row + annotation scheme ─────────────────────────────────── */}
+      <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
         {(
           [
             { key: 'cavities', value: metrics.cavities, color: toolColors[MARK.CAVITY] },
             { key: 'fillings', value: metrics.fillings, color: toolColors[MARK.FILLED] },
             { key: 'missing', value: metrics.missing, color: toolColors[MARK.EXTRACTED] },
             { key: 'healthy', value: metrics.healthy, color: HEALTHY_COLOR },
+            {
+              key: 'fixedProsthesis',
+              value: metrics.fixedProsthesis,
+              color: toolColors[MARK.FIXED_PROSTHESIS],
+            },
+            {
+              key: 'removableProsthesis',
+              value: metrics.removableProsthesis,
+              color: toolColors[MARK.REMOVABLE_PROSTHESIS],
+            },
           ] as const
         ).map(({ key, value, color }) => (
           <div key={key} className="flex items-center gap-1.5">

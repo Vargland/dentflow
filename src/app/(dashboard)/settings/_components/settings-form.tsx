@@ -178,9 +178,9 @@ export const SettingsForm = ({ initialSettings, doctorId, apiBase }: SettingsFor
               onValueChange={value => setAnnotationScheme(value ?? annotationScheme)}
             >
               <SelectTrigger id="annotation-scheme" className="w-full">
-                <SelectValue />
+                <SelectValue>{t(`odontogram.schemeSelector.${annotationScheme}`)}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent side="bottom">
                 <SelectItem value="international">
                   {t('odontogram.schemeSelector.international')}
                 </SelectItem>

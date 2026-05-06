@@ -61,4 +61,6 @@ export type OdontogramMetrics = {
   fillings: number
   missing: number
   healthy: number
+  fixedProsthesis: number
+  removableProsthesis: number
 }

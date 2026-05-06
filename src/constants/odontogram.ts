@@ -101,7 +101,7 @@ export const SCHEME_TOOL_COLORS: Record<AnnotationScheme, Record<MarkType, strin
     [MARK.CROWN]: '#E24B4A',
     [MARK.EXTRACTION]: '#185FA5',
     [MARK.ROOTCANAL]: '#E24B4A',
-    [MARK.EXTRACTED]: '#E24B4A',
+    [MARK.EXTRACTED]: '#185FA5',
     [MARK.FIXED_PROSTHESIS]: '#E24B4A',
     [MARK.REMOVABLE_PROSTHESIS]: '#E24B4A',
   },

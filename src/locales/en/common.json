@@ -135,7 +135,9 @@
       "cavities": "Cavities",
       "fillings": "Fillings",
       "missing": "Missing",
-      "healthy": "Healthy"
+      "healthy": "Healthy",
+      "fixedProsthesis": "Fixed pros.",
+      "removableProsthesis": "Removable pros."
     },
     "tools": {
       "cavity": "Cavity",

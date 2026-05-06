@@ -135,7 +135,9 @@
       "cavities": "Caries",
       "fillings": "Restauraciones",
       "missing": "Ausentes",
-      "healthy": "Sanos"
+      "healthy": "Sanos",
+      "fixedProsthesis": "Prot. fija",
+      "removableProsthesis": "Prot. removible"
     },
     "tools": {
       "cavity": "Caries",
