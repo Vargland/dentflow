@@ -32,7 +32,7 @@ export const MARK = {
   CROWN: 'crown',
   EXTRACTION: 'extraction',
   ROOTCANAL: 'rootcanal',
-  EXTRACTED: 'extracted',
+  EXTRACTED: 'extracted', //missing tooth
   FIXED_PROSTHESIS: 'fixed_prosthesis',
   REMOVABLE_PROSTHESIS: 'removable_prosthesis',
 } as const satisfies Record<string, MarkType>
@@ -101,7 +101,7 @@ export const SCHEME_TOOL_COLORS: Record<AnnotationScheme, Record<MarkType, strin
     [MARK.CROWN]: '#E24B4A',
     [MARK.EXTRACTION]: '#185FA5',
     [MARK.ROOTCANAL]: '#E24B4A',
-    [MARK.EXTRACTED]: '#185FA5',
+    [MARK.EXTRACTED]: '#E24B4A',
     [MARK.FIXED_PROSTHESIS]: '#E24B4A',
     [MARK.REMOVABLE_PROSTHESIS]: '#E24B4A',
   },
