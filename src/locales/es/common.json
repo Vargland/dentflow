@@ -98,7 +98,8 @@
       "cancel": "Cancelar",
       "create": "Crear paciente",
       "save": "Guardar cambios",
-      "saving": "Guardando..."
+      "saving": "Guardando...",
+      "saved": "Cambios guardados"
     }
   },
   "odontogram": {
