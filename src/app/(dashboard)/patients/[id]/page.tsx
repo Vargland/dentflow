@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Mail, MapPin, Pencil, Phone } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Mail, MapPin, Pencil, Phone } from 'lucide-react'
 
 import type { AnnotationScheme } from '@/typing/components/odontogram.types'
 import type { PatientPageParams } from '@/typing/pages/patients.types'
@@ -67,7 +67,7 @@ export default async function PatientPage({ params }: PatientPageParams) {
     getSettings(token).catch(() => null),
   ])
 
-  const annotationScheme = (settings?.annotationScheme ?? 'international') as AnnotationScheme
+  const annotationScheme = (settings?.annotationScheme ?? 'argentina') as AnnotationScheme
 
   const age = patient.fechaNacimiento ? calcAge(patient.fechaNacimiento) : null
 
@@ -108,6 +108,20 @@ export default async function PatientPage({ params }: PatientPageParams) {
 
       {/* Quick contact info */}
       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+        {patient.fechaNacimiento && (
+          <span className="flex items-center gap-1.5">
+            <CalendarDays className="h-4 w-4" />
+            {t('patientDetail.dob')}:{' '}
+            {new Date(patient.fechaNacimiento).toLocaleDateString(
+              lang === 'es' ? 'es-AR' : 'en-US',
+              {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              }
+            )}
+          </span>
+        )}
         {patient.telefono && (
           <a
             href={`tel:${patient.telefono}`}

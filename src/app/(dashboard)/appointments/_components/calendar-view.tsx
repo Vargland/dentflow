@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   addDays,
@@ -193,93 +193,113 @@ const TimeGrid = ({
   appointments: Appointment[]
   onSlotClick: (start: Date) => void
   onApptClick: (appt: Appointment) => void
-}) => (
-  <div className="overflow-auto max-h-[600px]">
-    <div className="flex">
-      {/* Hour labels */}
-      <div className="w-14 shrink-0 border-r border-gray-200">
-        <div className="h-10 border-b border-gray-100" />
-        {HOURS.map(hour => (
-          <div
-            key={hour}
-            className="h-14 border-b border-gray-100 pr-2 flex items-start justify-end pt-0.5"
-          >
-            <span className="text-xs text-gray-400">{hour.toString().padStart(2, '0')}:00</span>
-          </div>
-        ))}
-      </div>
+}) => {
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-      {/* Day columns */}
-      {days.map((day, dayIndex) => {
-        const dayAppts = appointments.filter(appointment =>
-          isSameDay(toZonedTime(parseISO(appointment.start_time), timezone), day)
-        )
+  useEffect(() => {
+    if (!scrollRef.current) return
 
-        const isToday = isSameDay(day, new Date())
+    const ROW_HEIGHT = 56
 
-        return (
-          <div
-            key={dayIndex}
-            className="flex-1 min-w-0 border-r border-gray-200 last:border-r-0 relative"
-          >
-            {/* Day header */}
+    const HEADER_HEIGHT = 40
+
+    const VISIBLE_ROWS = 4
+
+    const currentHour = new Date().getHours()
+
+    const offset = Math.max(0, currentHour - VISIBLE_ROWS)
+
+    scrollRef.current.scrollTop = offset * ROW_HEIGHT + HEADER_HEIGHT
+  }, [])
+
+  return (
+    <div ref={scrollRef} className="overflow-auto max-h-[600px]">
+      <div className="flex">
+        {/* Hour labels */}
+        <div className="w-14 shrink-0 border-r border-gray-200">
+          <div className="h-10 border-b border-gray-100" />
+          {HOURS.map(hour => (
             <div
-              className={`h-10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center sticky top-0 bg-white dark:bg-gray-900 z-10 ${
-                isToday ? 'text-blue-600 font-semibold' : 'text-gray-600'
-              }`}
+              key={hour}
+              className="h-14 border-b border-gray-100 pr-2 flex items-start justify-end pt-0.5"
             >
-              <span className="text-xs">{format(day, 'EEE d')}</span>
+              <span className="text-xs text-gray-400">{hour.toString().padStart(2, '0')}:00</span>
             </div>
+          ))}
+        </div>
 
-            {/* Hour cells */}
-            {HOURS.map(hour => (
+        {/* Day columns */}
+        {days.map((day, dayIndex) => {
+          const dayAppts = appointments.filter(appointment =>
+            isSameDay(toZonedTime(parseISO(appointment.start_time), timezone), day)
+          )
+
+          const isToday = isSameDay(day, new Date())
+
+          return (
+            <div
+              key={dayIndex}
+              className="flex-1 min-w-0 border-r border-gray-200 last:border-r-0 relative"
+            >
+              {/* Day header */}
               <div
-                key={hour}
-                className="h-14 border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors"
-                onClick={() => {
-                  const start = new Date(day)
+                className={`h-10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center sticky top-0 bg-white dark:bg-gray-900 z-10 ${
+                  isToday ? 'text-blue-600 font-semibold' : 'text-gray-600'
+                }`}
+              >
+                <span className="text-xs">{format(day, 'EEE d')}</span>
+              </div>
 
-                  start.setHours(hour, 0, 0, 0)
+              {/* Hour cells */}
+              {HOURS.map(hour => (
+                <div
+                  key={hour}
+                  className="h-14 border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    const start = new Date(day)
 
-                  onSlotClick(start)
-                }}
-              />
-            ))}
+                    start.setHours(hour, 0, 0, 0)
 
-            {/* Appointment overlays */}
-            {dayAppts.map(appt => {
-              const local = toZonedTime(parseISO(appt.start_time), timezone)
-
-              const localEnd = toZonedTime(parseISO(appt.end_time), timezone)
-
-              const topPct = ((local.getHours() * 60 + local.getMinutes()) / (24 * 60)) * 100
-
-              const heightPct = (appt.duration_minutes / (24 * 60)) * 100
-
-              const color = STATUS_COLORS[appt.status] ?? STATUS_COLORS.scheduled
-
-              return (
-                <button
-                  key={appt.id}
-                  onClick={() => onApptClick(appt)}
-                  className={`absolute left-0.5 right-0.5 rounded border text-xs px-1.5 py-0.5 text-left overflow-hidden ${color} hover:opacity-80 transition-opacity z-20`}
-                  style={{
-                    top: `calc(${topPct}% + 40px)`,
-                    height: `${Math.max(heightPct, 2)}%`,
+                    onSlotClick(start)
                   }}
-                  title={`${format(local, 'HH:mm')}–${format(localEnd, 'HH:mm')} ${appt.title}`}
-                >
-                  <span className="font-medium block truncate">{appt.title}</span>
-                  <span className="text-[10px] opacity-80">{format(local, 'HH:mm')}</span>
-                </button>
-              )
-            })}
-          </div>
-        )
-      })}
+                />
+              ))}
+
+              {/* Appointment overlays */}
+              {dayAppts.map(appt => {
+                const local = toZonedTime(parseISO(appt.start_time), timezone)
+
+                const localEnd = toZonedTime(parseISO(appt.end_time), timezone)
+
+                const topPct = ((local.getHours() * 60 + local.getMinutes()) / (24 * 60)) * 100
+
+                const heightPct = (appt.duration_minutes / (24 * 60)) * 100
+
+                const color = STATUS_COLORS[appt.status] ?? STATUS_COLORS.scheduled
+
+                return (
+                  <button
+                    key={appt.id}
+                    onClick={() => onApptClick(appt)}
+                    className={`absolute left-0.5 right-0.5 rounded border text-xs px-1.5 py-0.5 text-left overflow-hidden ${color} hover:opacity-80 transition-opacity z-20`}
+                    style={{
+                      top: `calc(${topPct}% + 40px)`,
+                      height: `${Math.max(heightPct, 2)}%`,
+                    }}
+                    title={`${format(local, 'HH:mm')}–${format(localEnd, 'HH:mm')} ${appt.title}`}
+                  >
+                    <span className="font-medium block truncate">{appt.title}</span>
+                    <span className="text-[10px] opacity-80">{format(local, 'HH:mm')}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const WeekView = ({ current, timezone, appointments, onSlotClick, onApptClick }: ViewProps) => {
   const start = startOfWeek(current, { weekStartsOn: 1 })

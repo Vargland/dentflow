@@ -143,3 +143,9 @@ export const ALL_TEETH: readonly number[] = [
   ...TEMPORARY_UPPER,
   ...TEMPORARY_LOWER,
 ]
+
+/** Permanent dentition only — used for CPO index calculations. */
+export const PERMANENT_TEETH: readonly number[] = [...PERMANENT_UPPER, ...PERMANENT_LOWER]
+
+/** Temporary dentition only — used for ceod index calculations. */
+export const TEMPORARY_TEETH: readonly number[] = [...TEMPORARY_UPPER, ...TEMPORARY_LOWER]

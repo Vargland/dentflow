@@ -521,33 +521,29 @@ const Odontogram = ({ patientId, initialData, token, initialScheme }: Odontogram
         </aside>
       </div>
 
-      {/* ── Metrics row + annotation scheme ─────────────────────────────────── */}
-      <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
+      {/* ── CPO index row ────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 flex-wrap border-t border-gray-100 dark:border-gray-700 pt-3">
+        <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest shrink-0">
+          {t('odontogram.metrics.cpoLabel')}:
+        </span>
         {(
           [
             { key: 'cavities', value: metrics.cavities, color: toolColors[MARK.CAVITY] },
             { key: 'fillings', value: metrics.fillings, color: toolColors[MARK.FILLED] },
             { key: 'missing', value: metrics.missing, color: toolColors[MARK.EXTRACTED] },
             { key: 'healthy', value: metrics.healthy, color: HEALTHY_COLOR },
-            {
-              key: 'fixedProsthesis',
-              value: metrics.fixedProsthesis,
-              color: toolColors[MARK.FIXED_PROSTHESIS],
-            },
-            {
-              key: 'removableProsthesis',
-              value: metrics.removableProsthesis,
-              color: toolColors[MARK.REMOVABLE_PROSTHESIS],
-            },
           ] as const
-        ).map(({ key, value, color }) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+        ).map(({ key, value, color }, idx, arr) => (
+          <span key={key} className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {t(`odontogram.metrics.${key}`)}:{' '}
               <span className="font-semibold text-gray-800 dark:text-gray-200">{value}</span>
             </span>
-          </div>
+            {idx < arr.length - 1 && (
+              <span className="text-gray-300 dark:text-gray-600 ml-1">·</span>
+            )}
+          </span>
         ))}
       </div>
 
