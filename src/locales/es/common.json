@@ -47,6 +47,7 @@
   "patientDetail": {
     "edit": "Editar",
     "yearsOld": "{{age}} años",
+    "dob": "Fecha de nacimiento",
     "tabs": {
       "odontogram": "Odontograma",
       "records": "Evoluciones",
@@ -132,6 +133,7 @@
     "toothHealthy": "Sano",
     "ariaHealthy": "sano",
     "metrics": {
+      "cpoLabel": "INDICE CPO",
       "cavities": "Caries",
       "fillings": "Restauraciones",
       "missing": "Ausentes",
@@ -315,7 +317,7 @@
     "clinicAddress": "Direccion",
     "clinicPhone": "Telefono",
     "emailLanguage": "Idioma de los emails",
-    "emailLanguageEs": "Espanol",
+    "emailLanguageEs": "Español",
     "emailLanguageEn": "English",
     "timezone": "Zona horaria",
     "timezonePlaceholder": "Seleccionar zona horaria...",

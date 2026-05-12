@@ -47,6 +47,7 @@
   "patientDetail": {
     "edit": "Edit",
     "yearsOld": "{{age}} years old",
+    "dob": "Date of birth",
     "tabs": {
       "odontogram": "Odontogram",
       "records": "Records",
@@ -132,6 +133,7 @@
     "toothHealthy": "Healthy",
     "ariaHealthy": "healthy",
     "metrics": {
+      "cpoLabel": "CPO INDEX",
       "cavities": "Cavities",
       "fillings": "Fillings",
       "missing": "Missing",

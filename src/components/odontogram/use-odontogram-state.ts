@@ -18,7 +18,9 @@ import {
   ANNOTATION_SCHEME,
   MARK,
   MULTI_TOOTH_MARKS,
+  PERMANENT_TEETH,
   SCHEME_MARK_TYPES,
+  TEMPORARY_TEETH,
   WHOLE_TOOTH_MARKS,
 } from '@/constants/odontogram'
 
@@ -94,26 +96,16 @@ const buildInitialState = (initialData: OdontogramState | null): OdontogramData 
   return result
 }
 
-/** Build a fully blank odontogram. */
-const buildBlankState = (): OdontogramData => {
-  const blank: OdontogramData = {}
-
-  for (const fdi of ALL_TEETH) {
-    blank[fdi] = blankTooth()
-  }
-
-  return blank
-}
-
 // ── Metrics ───────────────────────────────────────────────────────────────────
 
 /**
- * Derive aggregated metrics from the full odontogram state.
+ * Derive aggregated metrics from the odontogram state for a given set of teeth.
  *
  * @param state - Full odontogram state.
+ * @param teeth - FDI numbers of the dentition to count (permanent or temporary).
  * @returns Computed metric counters.
  */
-const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
+const computeMetrics = (state: OdontogramData, teeth: readonly number[]): OdontogramMetrics => {
   let cavities = 0
 
   let fillings = 0
@@ -126,7 +118,7 @@ const computeMetrics = (state: OdontogramData): OdontogramMetrics => {
 
   let removableProsthesis = 0
 
-  for (const fdi of ALL_TEETH) {
+  for (const fdi of teeth) {
     const tooth = state[fdi]
 
     if (!tooth) {
@@ -347,14 +339,24 @@ export const useOdontogramState = (
   }, [])
 
   const clearAll = useCallback(() => {
-    setTeeth(buildBlankState())
+    const teethToClear = dentition === 'permanent' ? PERMANENT_TEETH : TEMPORARY_TEETH
+
+    setTeeth(prev => {
+      const next = { ...prev }
+
+      for (const fdi of teethToClear) {
+        next[fdi] = blankTooth()
+      }
+
+      return next
+    })
 
     setSelectedTooth(null)
 
     setSelectionBuffer([])
 
     setDirty(true)
-  }, [])
+  }, [dentition])
 
   const markSaved = useCallback(() => {
     setDirty(false)
@@ -372,7 +374,10 @@ export const useOdontogramState = (
     setSelectionBuffer([])
   }, [])
 
-  const metrics = computeMetrics(teeth)
+  const metrics = computeMetrics(
+    teeth,
+    dentition === 'permanent' ? PERMANENT_TEETH : TEMPORARY_TEETH
+  )
 
   return {
     teeth,

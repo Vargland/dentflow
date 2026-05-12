@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ArrowDownUp,
   Calendar,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -607,6 +608,16 @@ const PatientPanel = ({
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5">
+            {patient.fechaNacimiento && (
+              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                <CalendarDays className="h-3 w-3" />
+                {t('patientDetail.dob')}:{' '}
+                {new Date(patient.fechaNacimiento).toLocaleDateString(
+                  i18n.language === 'es' ? 'es-AR' : 'en-US',
+                  { day: '2-digit', month: '2-digit', year: 'numeric' }
+                )}
+              </span>
+            )}
             {patient.telefono && (
               <a
                 href={`tel:${patient.telefono}`}
